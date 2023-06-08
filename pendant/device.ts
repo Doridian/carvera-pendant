@@ -1,54 +1,43 @@
 import { EventEmitter } from "node:events";
 import { Device, HID, devices } from "node-hid";
-import { ControlReport, DisplayFlags } from "./control";
-import { DeviceReport, SelectedAxis, SelectedFeedRate } from "./report";
+import { ControlReport } from "./control";
+import { DeviceReport } from "./report";
+import { CoordinateMode, DisplayFlags, Axis, FeedRate, StepMode } from "./types";
 
 const PENDANT_VID = 0x10ce;
 const PENDANT_PID = 0xeb93;
 
-export const enum StepMode {
-    STEP_MODE_CONT    = DisplayFlags.STEP_MODE_CONT,
-    STEP_MODE_STEP    = DisplayFlags.STEP_MODE_STEP,
-    STEP_MODE_MPG     = DisplayFlags.STEP_MODE_MPG,
-    STEP_MODE_PERCENT = DisplayFlags.STEP_MODE_PERCENT,
-}
-
-export const enum CoordinateMode {
-    MACHINE_COORDS = DisplayFlags.MACHINE_COORDS,
-    WORK_COORDS    = DisplayFlags.WORK_COORDS,
-}
-
 export interface JogReport {
     stepMode: StepMode;
-    axis: SelectedAxis;
-    rate: SelectedFeedRate;
+    axis: Axis;
+    rate: FeedRate;
     delta: number;
 }
 
-const DISPLAY_AXIS_XYZ = [SelectedAxis.X, SelectedAxis.Y, SelectedAxis.Z];
-const DISPLAY_AXIS_ABC = [SelectedAxis.A, SelectedAxis.B, SelectedAxis.C];
+const DISPLAY_AXIS_XYZ = [Axis.X, Axis.Y, Axis.Z];
+const DISPLAY_AXIS_ABC = [Axis.A, Axis.B, Axis.C];
 
 export class PendantDevice extends EventEmitter {
     // Displayed data
-    public axisCoordinates: { [key in SelectedAxis]: number } = {
-        [SelectedAxis.X]: 0,
-        [SelectedAxis.Y]: 0,
-        [SelectedAxis.Z]: 0,
-        [SelectedAxis.A]: 0,
-        [SelectedAxis.B]: 0,
-        [SelectedAxis.C]: 0,
+    public axisCoordinates: { [key in Axis]: number } = {
+        [Axis.X]: 0,
+        [Axis.Y]: 0,
+        [Axis.Z]: 0,
+        [Axis.A]: 0,
+        [Axis.B]: 0,
+        [Axis.C]: 0,
     };
     public feedRate: number = 0;
     public spindleSpeed: number = 0;
 
-    public coordinateMode: CoordinateMode = CoordinateMode.MACHINE_COORDS;
-    public stepMode: StepMode = StepMode.STEP_MODE_CONT;
+    public coordinateMode: CoordinateMode = CoordinateMode.MACHINE;
+    public stepMode: StepMode = StepMode.CONT;
 
     // Control state
     private pressedButtons: Set<number> = new Set();
 
     // Internal state
-    private axisLines: SelectedAxis[] = DISPLAY_AXIS_XYZ;
+    private axisLines: Axis[] = DISPLAY_AXIS_XYZ;
 
     private writeDevice?: HID;
     private readDevice?: HID;
@@ -140,9 +129,9 @@ export class PendantDevice extends EventEmitter {
 
         let targetAxisOffset = DISPLAY_AXIS_XYZ;
         switch (report.axis) {
-            case SelectedAxis.A:
-            case SelectedAxis.B:
-            case SelectedAxis.C:
+            case Axis.A:
+            case Axis.B:
+            case Axis.C:
                 targetAxisOffset = DISPLAY_AXIS_ABC;
                 break;
             default:

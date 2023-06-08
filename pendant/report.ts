@@ -1,38 +1,11 @@
+import { Axis, FeedRate } from "./types";
+
 const SELECTED_AXIS_NONE = 0x06;
-
-export const enum SelectedAxis {
-    X = 0x11,
-    Y = 0x12,
-    Z = 0x13,
-    A = 0x14,
-    B = 0x15,
-    C = 0x16,
-}
-
-export const enum SelectedFeedRate {
-    RATE_2_PERCENT = 0x0d,
-    RATE_0_001 = 0x0d,
-
-    RATE_5_PERCENT = 0x0e,
-    RATE_0_01 = 0x0e,
-
-    RATE_10_PERCENT = 0x0f,
-    RATE_0_1 = 0x0f,
-
-    RATE_30_PERCENT = 0x10,
-    RATE_1_0 = 0x10,
-
-    RATE_60_PERCENT = 0x1a,
-
-    RATE_100_PERCENT = 0x1b,
-
-    RATE_LEAD = 0x1c,
-}
 
 export class DeviceReport {
     public buttons: Set<number>;
-    public feedRate: SelectedFeedRate;
-    public axis?: SelectedAxis;
+    public feedRate: FeedRate;
+    public axis?: Axis;
     public jog: number;
 
     public constructor(report: Buffer) {

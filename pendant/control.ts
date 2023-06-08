@@ -1,22 +1,8 @@
 import { HID } from "node-hid";
+import { DisplayFlags } from "./types";
 
 const CONTROL_REPORT_ID = 0x06;
 const BLOCK_DATA_LEN = 7;
-
-export const enum DisplayFlags {
-    STEP_MODE_CONT    = 0,
-    STEP_MODE_STEP    = 1,
-    STEP_MODE_MPG     = 2,
-    STEP_MODE_PERCENT = 3,
-
-    RESET             = 0b01000000,
-
-    MACHINE_COORDS    = 0b00000000,
-    WORK_COORDS       = 0b10000000,
-
-    NONE              = 0b00000000,
-    ALL               = 0b11111111,
-}
 
 export class ControlReport {
     seed: number = 0xff;

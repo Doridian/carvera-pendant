@@ -1,4 +1,5 @@
-import { JogReport, PendantDevice, StepMode } from "./pendant/device";
+import { JogReport, PendantDevice } from "./pendant/device";
+import { Axis, StepMode } from "./pendant/types";
 
 const device = new PendantDevice();
 device.on('error', (err: any) => {
@@ -15,14 +16,14 @@ device.on('jog', (jog: JogReport) => {
 })
 
 device.init().then(() => {
-    device.axisCoordinates[0] = 1.2345;
-    device.axisCoordinates[1] = 2.3456;
-    device.axisCoordinates[2] = 3.4567;
-    device.axisCoordinates[3] = 4.5678;
-    device.axisCoordinates[4] = 5.6789;
-    device.axisCoordinates[5] = 6.7890;
+    device.axisCoordinates[Axis.X] = 1.2345;
+    device.axisCoordinates[Axis.Y] = 2.3456;
+    device.axisCoordinates[Axis.Z] = 3.4567;
+    device.axisCoordinates[Axis.A] = 4.5678;
+    device.axisCoordinates[Axis.B] = 5.6789;
+    device.axisCoordinates[Axis.C] = 6.7890;
     device.spindleSpeed = 10000;
     device.feedRate = 400;
-    device.stepMode = StepMode.STEP_MODE_STEP;
+    device.stepMode = StepMode.STEP;
     device.refreshDisplay().catch(console.error);
 });
