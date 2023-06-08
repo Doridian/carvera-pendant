@@ -11,8 +11,8 @@ export const enum DisplayFlags {
 
     RESET             = 0b01000000,
 
-    MACHINE_COORDS    = 0b10000000,
-    WORK_COORDS       = 0b00000000,
+    MACHINE_COORDS    = 0b00000000,
+    WORK_COORDS       = 0b10000000,
 
     NONE              = 0b00000000,
     ALL               = 0b11111111,
