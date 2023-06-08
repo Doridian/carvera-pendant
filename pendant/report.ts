@@ -1,5 +1,6 @@
+const SELECTED_AXIS_NONE = 0x06;
+
 export const enum SelectedAxis {
-    NONE = 0x06,
     X = 0x11,
     Y = 0x12,
     Z = 0x13,
@@ -31,7 +32,7 @@ export const enum SelectedFeedRate {
 export class DeviceReport {
     public buttons: Set<number>;
     public feedRate: SelectedFeedRate;
-    public axis: SelectedAxis;
+    public axis?: SelectedAxis;
     public jog: number;
 
     public constructor(report: Buffer) {
@@ -51,7 +52,11 @@ export class DeviceReport {
             this.buttons.add(report[2]);
         }
         this.feedRate = report[3];
-        this.axis = report[4];
+        if (report[4] === SELECTED_AXIS_NONE) {
+            this.axis = undefined;
+        } else {
+            this.axis = report[4];
+        }
         this.jog = new Int8Array(report)[5];
     }
 }

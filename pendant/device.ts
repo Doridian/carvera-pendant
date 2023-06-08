@@ -25,9 +25,19 @@ export interface JogReport {
     delta: number;
 }
 
+const DISPLAY_AXIS_XYZ = [SelectedAxis.X, SelectedAxis.Y, SelectedAxis.Z];
+const DISPLAY_AXIS_ABC = [SelectedAxis.A, SelectedAxis.B, SelectedAxis.C];
+
 export class PendantDevice extends EventEmitter {
     // Displayed data
-    public axisCoordinates = [0, 0, 0, 0, 0, 0];
+    public axisCoordinates: { [key in SelectedAxis]: number } = {
+        [SelectedAxis.X]: 0,
+        [SelectedAxis.Y]: 0,
+        [SelectedAxis.Z]: 0,
+        [SelectedAxis.A]: 0,
+        [SelectedAxis.B]: 0,
+        [SelectedAxis.C]: 0,
+    };
     public feedRate: number = 0;
     public spindleSpeed: number = 0;
 
@@ -38,7 +48,7 @@ export class PendantDevice extends EventEmitter {
     private pressedButtons: Set<number> = new Set();
 
     // Internal state
-    private axisDisplayOffset = 0;
+    private axisLines: SelectedAxis[] = DISPLAY_AXIS_XYZ;
 
     private writeDevice?: HID;
     private readDevice?: HID;
@@ -55,16 +65,11 @@ export class PendantDevice extends EventEmitter {
     }
 
     public async refreshDisplay() {
-        let axisOffset = this.axisDisplayOffset;
-        if (axisOffset < 0) {
-            axisOffset = 0;
-        }
-
         const packet = new ControlReport();
         packet.flags = this.stepMode | this.coordinateMode;
         packet.feedRate = this.feedRate;
         packet.spindleSpeed = this.spindleSpeed;
-        packet.coordinates = this.axisCoordinates.slice(axisOffset, axisOffset + 3);
+        packet.coordinates = this.axisLines.map(axis => this.axisCoordinates[axis]);
         await this.control(packet);
     }
 
@@ -133,22 +138,20 @@ export class PendantDevice extends EventEmitter {
     private handleReport(report: DeviceReport) {
         let needsRedraw = false;
 
-        let targetAxisOffset = 0;
+        let targetAxisOffset = DISPLAY_AXIS_XYZ;
         switch (report.axis) {
-            case SelectedAxis.NONE:
-                targetAxisOffset = -1;
             case SelectedAxis.A:
             case SelectedAxis.B:
             case SelectedAxis.C:
-                targetAxisOffset = 3;
+                targetAxisOffset = DISPLAY_AXIS_ABC;
                 break;
             default:
-                targetAxisOffset = 0;
+                targetAxisOffset = DISPLAY_AXIS_XYZ;
         }
 
-        if (targetAxisOffset !== this.axisDisplayOffset) {
+        if (targetAxisOffset !== this.axisLines) {
             needsRedraw = true;
-            this.axisDisplayOffset = targetAxisOffset;
+            this.axisLines = targetAxisOffset;
         }
 
         for (const button of report.buttons) {
@@ -163,7 +166,7 @@ export class PendantDevice extends EventEmitter {
             }
         }
 
-        if (report.jog) {
+        if (report.jog && report.axis) {
             const jogReport: JogReport = {
                 axis: report.axis,
                 delta: report.jog,
