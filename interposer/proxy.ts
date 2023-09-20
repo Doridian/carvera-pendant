@@ -142,8 +142,9 @@ export class ProxyProvider extends EventEmitter {
     private clientDataHandler(data: Buffer) {
         this.target.send(data);
 
-        this.lastCommandQuestion = (data.byteLength === 1 && data[0] === 0x3F /* ? */);
-        this.questionBuffer = '';
+        if (data.byteLength === 1 && data[0] === 0x3F /* ? */) {
+            this.lastCommandQuestion = true;
+        }
     }
 
     private deviceDataHandler(data: Buffer) {
@@ -159,6 +160,7 @@ export class ProxyProvider extends EventEmitter {
                 const parsedAnswer = StatusReport.parse(qAnswer);
                 this.emit('status', parsedAnswer);
 
+                this.lastCommandQuestion = false;
                 this.questionBuffer = '';
             }
         }
