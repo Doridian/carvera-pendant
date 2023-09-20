@@ -1,6 +1,9 @@
+import { DiscoveryProvider } from "./interposer/discovery";
+import { ProxyProvider } from "./interposer/proxy";
 import { JogReport, PendantDevice } from "./pendant/device";
 import { Axis, StepMode } from "./pendant/types";
 
+/*
 const device = new PendantDevice();
 device.on('error', (err: any) => {
     console.error(err);
@@ -27,3 +30,15 @@ device.init().then(() => {
     device.stepMode = StepMode.STEP;
     device.refreshDisplay().catch(console.error);
 });
+*/
+
+const PROXY_IP = '127.0.0.1';
+const PROXY_PORT = 9999;
+
+const discovery = new DiscoveryProvider('Pendant', PROXY_IP, PROXY_PORT, false);
+const proxy = new ProxyProvider(PROXY_PORT, PROXY_IP);
+
+proxy.start();
+discovery.start();
+
+console.log('System online!');
