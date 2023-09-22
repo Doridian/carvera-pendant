@@ -96,8 +96,9 @@ export class PendantDevice extends EventEmitter {
 
                 this.readDevice.on('data', this.handleData.bind(this));
                 this.readDevice.on('error', this.handleError.bind(this));
+                
                 if (this.writeDevice !== this.readDevice) {
-                    this.writeDevice.on('error', this.handleError2.bind(this));
+                    this.writeDevice.on('error', this.handleErrorW.bind(this));
                 }
 
                 resolve();
@@ -190,13 +191,15 @@ export class PendantDevice extends EventEmitter {
         }
     }
 
-    private handleError(err: any) {
-        console.error('R', err);
-        //this.emit('error', err);
+    private handleErrorW(err: Error) {
+        if (err.message === 'could not read from HID device') {
+            // Ignore this error, we do not need to read from the write device
+            return;
+        }
+        this.handleError(err);
     }
 
-    private handleError2(err: any) {
-        console.error('W', err);
-        //this.emit('error', err);
+    private handleError(err: Error) {
+        this.emit('error', err);
     }
 }
