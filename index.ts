@@ -4,7 +4,7 @@ import { JogReport, PendantDevice } from "./pendant/device";
 import { Axis, CoordinateMode, FeedRate, StepMode } from "./pendant/types";
 
 async function main() {
-    const SERIAL_PORT = '/dev/cu.usbserial-A50285BI';
+    const SERIAL_PORT = process.env.SERIAL_PORT || '';
     const PROXY_IP = '127.0.0.1';
     const PROXY_PORT = 9999;
 
