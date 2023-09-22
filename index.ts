@@ -3,30 +3,6 @@ import { ProxyProvider, SerialProxyTarget, StatusReport } from "./interposer/pro
 import { JogReport, PendantDevice } from "./pendant/device";
 import { Axis, CoordinateMode, FeedRate, StepMode } from "./pendant/types";
 
-/*
-
-device.on('button_up', (button: number) => {
-    console.log('Released', button);
-});
-
-device.on('jog', (jog: JogReport) => {
-    console.log('jog', jog);
-})
-
-device.init().then(() => {
-    device.axisCoordinates[Axis.X] = 1.2345;
-    device.axisCoordinates[Axis.Y] = 2.3456;
-    device.axisCoordinates[Axis.Z] = 3.4567;
-    device.axisCoordinates[Axis.A] = 4.5678;
-    device.axisCoordinates[Axis.B] = 5.6789;
-    device.axisCoordinates[Axis.C] = 6.7890;
-    device.spindleSpeed = 10000;
-    device.feedRate = 400;
-    device.stepMode = StepMode.STEP;
-    device.refreshDisplay().catch(console.error);
-});
-*/
-
 async function main() {
     const SERIAL_PORT = '/dev/cu.usbserial-A50285BI';
     const PROXY_IP = '127.0.0.1';
@@ -48,6 +24,8 @@ async function main() {
     await pendant.init();
     pendant.stepMode = StepMode.STEP;
     pendant.coordinateMode = CoordinateMode.MACHINE;
+
+    let currentStatus = new StatusReport();
 
     pendant.on('jog', (jog: JogReport) => {
         let axisName = '';
@@ -89,7 +67,98 @@ async function main() {
         proxy.inject(`$J ${axisName}${jogAmount.toFixed(4)}\n`);
     });
 
+    pendant.on('button_up', (button: number) => {
+        switch (button) {
+            case 1: // Reset
+                proxy.inject('$X\n');
+                break;
+            case 2: // Stop
+                proxy.inject('M112\n');
+                break;
+            case 3: // Start/Pause
+                switch (currentStatus.state) {
+                    case 'Idle':
+                        proxy.inject('~\n');
+                        break;
+                    default:
+                        proxy.inject('!\n');
+                        break;
+                }
+                break;
+
+            case 4: // Feed+
+                break;
+            case 5: // Feed-
+                break;
+            case 6: // Spindle+
+                break;
+            case 7: // Spindle-
+                break;
+
+            case 8: // M-Home
+                proxy.inject('G28\n');
+                break;
+            case 9: // Safe-Z
+                proxy.inject('G90\nG53 G0 Z-1\n');
+                break;
+            case 10: // W-Home
+                proxy.inject('G90\nG53 G0 Z-1\nG54 G0 X0 Y0\n');
+                break;
+            case 11: // S-ON/OFF
+                if (currentStatus.laserTesting) {
+                    proxy.inject('M324\nM322\n');
+                } else {
+                    proxy.inject('M321\nM323\n');
+                }
+                break;
+            case 12: // Fn
+                break;
+
+            case 13: // Probe-Z
+                proxy.inject('G38.2 Z-152.200 F500.000\n');
+                break;
+
+            case 14: // Continuous
+                if (pendant.coordinateMode === CoordinateMode.MACHINE) {
+                    pendant.coordinateMode = CoordinateMode.WORK;
+                } else {
+                    pendant.coordinateMode = CoordinateMode.MACHINE;
+                }
+                pendant.refreshDisplay().catch(console.error);
+                break;
+            case 15: // Step
+                break;
+
+            case 16: // Macro-10
+                let axis = '_';
+                switch (pendant.selectedAxis) {
+                    case Axis.X:
+                        axis = 'X';
+                        break;
+                    case Axis.Y:
+                        axis = 'Y';
+                        break;
+                    case Axis.Z:
+                        axis = 'Z';
+                        break;
+                    case Axis.A:
+                        axis = 'A';
+                        break;
+                    case Axis.B:
+                        axis = 'B';
+                        break;
+                    case Axis.C:
+                        axis = 'C';
+                        break;
+                }
+                proxy.inject(`G10L20P0${axis}0\n`);
+                break;
+        }
+    });
+
     proxy.on('status', (status: StatusReport) => {
+        currentStatus = status;
+
         switch (pendant.coordinateMode) {
             case CoordinateMode.MACHINE:
                 pendant.axisCoordinates[Axis.X] = status.mpos[0];

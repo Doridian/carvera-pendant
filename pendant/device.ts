@@ -33,6 +33,8 @@ export class PendantDevice extends EventEmitter {
     public coordinateMode: CoordinateMode = CoordinateMode.MACHINE;
     public stepMode: StepMode = StepMode.CONT;
 
+    public selectedAxis: Axis = Axis.C;
+
     // Control state
     private pressedButtons: Set<number> = new Set();
 
@@ -126,6 +128,8 @@ export class PendantDevice extends EventEmitter {
 
     private handleReport(report: DeviceReport) {
         let needsRedraw = false;
+
+        this.selectedAxis = report.axis ?? Axis.C;
 
         let targetAxisOffset = DISPLAY_AXIS_XYZ;
         switch (report.axis) {

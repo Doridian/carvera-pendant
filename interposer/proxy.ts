@@ -65,6 +65,8 @@ export class StatusReport {
 
     state: string = 'N/A';
 
+    laserTesting: boolean = false;
+
     public static parse(data: string): StatusReport {
         const res = new StatusReport();
 
@@ -90,6 +92,10 @@ export class StatusReport {
                     res.spindleCurrent = spindleSplit[0];
                     res.spindleTarget = spindleSplit[1];
                     res.spindleTemp = spindleSplit[4];
+                    break;
+                case 'L':
+                    const laserSplit = subSplit[1].split(',').map(parseFloat);
+                    res.laserTesting = laserSplit[2] !== 0;
                     break;
             }
         }
