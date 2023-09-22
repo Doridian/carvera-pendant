@@ -89,8 +89,6 @@ export class PendantDevice extends EventEmitter {
                     return;
                 }
 
-                console.log('CAND', this.writeDevice, this.readDevice);
-
                 this.readDevice.removeAllListeners('error');
                 this.writeDevice.removeAllListeners('error');
 
