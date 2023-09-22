@@ -89,6 +89,8 @@ export class PendantDevice extends EventEmitter {
                     return;
                 }
 
+                console.log('CAND', this.writeDevice, this.readDevice);
+
                 this.readDevice.removeAllListeners('error');
                 this.writeDevice.removeAllListeners('error');
 
@@ -110,8 +112,6 @@ export class PendantDevice extends EventEmitter {
                     report.writeTo(candidateDevice);
                     this.writeDevice = candidateDevice;
                 } catch {}
-
-                console.log('CAND', deviceInfo, candidateDevice);
         
                 candidateDevice.once('data', (_: Buffer) => {
                     this.readDevice = candidateDevice;
