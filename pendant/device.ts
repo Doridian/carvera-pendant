@@ -97,7 +97,7 @@ export class PendantDevice extends EventEmitter {
                 this.readDevice.on('data', this.handleData.bind(this));
                 this.readDevice.on('error', this.handleError.bind(this));
                 if (this.writeDevice !== this.readDevice) {
-                    this.writeDevice.on('error', this.handleError.bind(this));
+                    this.writeDevice.on('error', this.handleError2.bind(this));
                 }
 
                 resolve();
@@ -108,6 +108,7 @@ export class PendantDevice extends EventEmitter {
                     continue;
                 }
                 const candidateDevice = new HID(deviceInfo.path);
+                candidateDevice.on('error', () => { });
                 try {
                     report.writeTo(candidateDevice);
                     this.writeDevice = candidateDevice;
@@ -117,7 +118,6 @@ export class PendantDevice extends EventEmitter {
                     this.readDevice = candidateDevice;
                     startupDone();
                 });
-                candidateDevice.on('error', () => { });
             }
         
             setTimeout(startupDone, 1000);
@@ -191,7 +191,12 @@ export class PendantDevice extends EventEmitter {
     }
 
     private handleError(err: any) {
-        console.error(err);
+        console.error('R', err);
+        //this.emit('error', err);
+    }
+
+    private handleError2(err: any) {
+        console.error('W', err);
         //this.emit('error', err);
     }
 }
