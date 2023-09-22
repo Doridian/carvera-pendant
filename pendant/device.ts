@@ -95,10 +95,10 @@ export class PendantDevice extends EventEmitter {
                 this.writeDevice.removeAllListeners('error');
 
                 this.readDevice.on('data', this.handleData.bind(this));
-                this.readDevice.on('error', this.handleError.bind(this));
+                /*this.readDevice.on('error', this.handleError.bind(this));
                 if (this.writeDevice !== this.readDevice) {
                     this.writeDevice.on('error', this.handleError.bind(this));
-                }
+                }*/
 
                 resolve();
             };
