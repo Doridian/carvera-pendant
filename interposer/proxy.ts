@@ -131,6 +131,13 @@ export class ProxyProvider extends EventEmitter {
         this.client = socket;
         this.lastCommandQuestion = false;
 
+        socket.on('error', (err) => {
+            if (this.client !== socket) {
+                return;
+            }
+            console.error(err);
+            this.client = undefined;
+        });
         socket.on('close', () => {
             if (this.client !== socket) {
                 return;
