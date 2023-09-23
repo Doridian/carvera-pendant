@@ -151,7 +151,7 @@ async function main() {
                         axis = 'C';
                         break;
                 }
-                proxy.inject(`G10L20P0${axis}0\n`);
+                proxy.inject(`G10 L20 P0 ${axis}0\n`);
                 break;
         }
     });
