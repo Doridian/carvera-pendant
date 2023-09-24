@@ -208,7 +208,7 @@ export class ProxyProvider extends EventEmitter {
         });
         this.target.register(this.deviceDataHandler);
         this.timer = setInterval(() => {
-            if ((Date.now() - this.lastQuestionTime) < 500) {
+            if (this.client !== undefined) {
                 return;
             }
             this.clientDataHandler(Buffer.from('\n?\n'));
