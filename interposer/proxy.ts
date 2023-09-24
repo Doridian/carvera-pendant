@@ -111,6 +111,7 @@ export class ProxyProvider extends EventEmitter {
 
     private lastCommandQuestion: boolean = false;
     private questionBuffer: string = '';
+    private lastQuestionTime: number = 0;
 
     public constructor(private target: ProxyTarget, private port: number, private ip: string = '127.0.0.1') {
         super();
@@ -158,6 +159,7 @@ export class ProxyProvider extends EventEmitter {
 
         if (data.byteLength === 1 && data[0] === 0x3F /* ? */) {
             this.lastCommandQuestion = true;
+            this.lastQuestionTime = Date.now();
         }
     }
 
@@ -205,10 +207,10 @@ export class ProxyProvider extends EventEmitter {
         });
         this.target.register(this.deviceDataHandler);
         this.timer = setInterval(() => {
-            if (this.client !== undefined) {
+            if ((Date.now() - this.lastQuestionTime) < 500) {
                 return;
             }
-            this.inject('\n?\n');
+            this.clientDataHandler(Buffer.from('\n?\n'));
         }, 500);
     }
 }
