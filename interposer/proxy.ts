@@ -107,6 +107,7 @@ export class StatusReport {
 export class ProxyProvider extends EventEmitter {
     private server?: Server;
     private client?: Socket;
+    private timer?: NodeJS.Timeout;
 
     private lastCommandQuestion: boolean = false;
     private questionBuffer: string = '';
@@ -180,6 +181,10 @@ export class ProxyProvider extends EventEmitter {
     }
 
     public stop() {
+        if (this.timer !== undefined) {
+            clearInterval(this.timer);
+            this.timer = undefined;
+        }
         if (this.server) {
             this.server.close();
             this.server = undefined;
@@ -199,5 +204,11 @@ export class ProxyProvider extends EventEmitter {
             this.clientHandler(socket);
         });
         this.target.register(this.deviceDataHandler);
+        this.timer = setInterval(() => {
+            if (this.client !== undefined) {
+                return;
+            }
+            this.inject('\n?\n');
+        }, 500);
     }
 }
