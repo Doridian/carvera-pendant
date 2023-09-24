@@ -15,8 +15,10 @@ It does this by setting itself up as a "man in the middle" between the Carvera c
 1. Run `npm start`
 1. Wait for the line `System online!` to be printed out
 1. In the menu of Carvera Controller, select `WIFI...` and then `Pendant` should show up in the drop down after a couple seconds
+![vncviewer_m4ViRYPelW](https://github.com/Doridian/carvera-pendant/assets/631409/25b258da-3464-44d1-8455-c93cf65afb49)
 1. Everything should now be ready
 
 ## Limitations
 
 - Most of the functionality of the Pendant only works (by design) while the Carvera Controller is connected to the pendant software
+
