@@ -157,7 +157,8 @@ export class ProxyProvider extends EventEmitter {
     private clientDataHandler(data: Buffer) {
         this.target.send(data);
 
-        if (data.byteLength === 1 && data[0] === 0x3F /* ? */) {
+        const dataStr = data.toString('utf-8').trim();
+        if (dataStr === '?') {
             this.lastCommandQuestion = true;
             this.lastQuestionTime = Date.now();
         }
