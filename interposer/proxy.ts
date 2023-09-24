@@ -107,7 +107,6 @@ export class StatusReport {
 export class ProxyProvider extends EventEmitter {
     private server?: Server;
     private client?: Socket;
-    private timer?: NodeJS.Timeout;
 
     private lastCommandQuestion: boolean = false;
     private questionBuffer: string = '';
@@ -122,8 +121,25 @@ export class ProxyProvider extends EventEmitter {
         return this.client !== undefined;
     }
 
+    public isClientAlive() {
+        if (this.client === undefined) {
+            return false;
+        }
+        if ((Date.now() - this.lastQuestionTime) > 1000) {
+            return false;
+        }
+        return true;
+    }
+
     public inject(command: string) {
         this.target.send(Buffer.from(command));
+    }
+
+    public injectWhenAlive(command: string) {
+        if (!this.isClientAlive()) {
+            return;
+        }
+        this.inject(command);
     }
 
     private clientHandler(socket: Socket) {
@@ -184,10 +200,6 @@ export class ProxyProvider extends EventEmitter {
     }
 
     public stop() {
-        if (this.timer !== undefined) {
-            clearInterval(this.timer);
-            this.timer = undefined;
-        }
         if (this.server) {
             this.server.close();
             this.server = undefined;
@@ -207,11 +219,5 @@ export class ProxyProvider extends EventEmitter {
             this.clientHandler(socket);
         });
         this.target.register(this.deviceDataHandler);
-        this.timer = setInterval(() => {
-            if (this.client !== undefined) {
-                return;
-            }
-            this.clientDataHandler(Buffer.from('\n?\n'));
-        }, 200);
     }
 }

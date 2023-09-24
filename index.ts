@@ -64,24 +64,24 @@ async function main() {
                 break;
         }
 
-        proxy.inject(`$J ${axisName}${jogAmount.toFixed(4)}\n`);
+        proxy.injectWhenAlive(`$J ${axisName}${jogAmount.toFixed(4)}\n`);
     });
 
     pendant.on('button_up', (button: number) => {
         switch (button) {
             case 1: // Reset
-                proxy.inject('$X\n');
+                proxy.inject('\n$X\n');
                 break;
             case 2: // Stop
-                proxy.inject('M112\n');
+                proxy.inject('\nM112\n');
                 break;
             case 3: // Start/Pause
                 switch (currentStatus.state) {
                     case 'Idle':
-                        proxy.inject('~\n');
+                        proxy.inject('\n~\n');
                         break;
                     default:
-                        proxy.inject('!\n');
+                        proxy.inject('\n!\n');
                         break;
                 }
                 break;
@@ -96,26 +96,26 @@ async function main() {
                 break;
 
             case 8: // M-Home
-                proxy.inject('G28\n');
+                proxy.injectWhenAlive('G28\n');
                 break;
             case 9: // Safe-Z
-                proxy.inject('G90\nG53 G0 Z-1\n');
+                proxy.injectWhenAlive('G90\nG53 G0 Z-1\n');
                 break;
             case 10: // W-Home
-                proxy.inject('G90\nG53 G0 Z-1\nG54 G0 X0 Y0\n');
+                proxy.injectWhenAlive('G90\nG53 G0 Z-1\nG54 G0 X0 Y0\n');
                 break;
             case 11: // S-ON/OFF
                 if (currentStatus.laserTesting) {
-                    proxy.inject('M324\nM322\n');
+                    proxy.injectWhenAlive('M324\nM322\n');
                 } else {
-                    proxy.inject('M321\nM323\n');
+                    proxy.injectWhenAlive('M321\nM323\n');
                 }
                 break;
             case 12: // Fn
                 break;
 
             case 13: // Probe-Z
-                proxy.inject('G38.2 Z-152.200 F500.000\n');
+                proxy.injectWhenAlive('G38.2 Z-152.200 F500.000\n');
                 break;
 
             case 14: // Continuous
@@ -151,7 +151,7 @@ async function main() {
                         axis = 'C';
                         break;
                 }
-                proxy.inject(`G10 L20 P0 ${axis}0\n`);
+                proxy.injectWhenAlive(`G10 L20 P0 ${axis}0\n`);
                 break;
         }
     });
