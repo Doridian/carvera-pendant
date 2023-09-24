@@ -21,4 +21,5 @@ It does this by setting itself up as a "man in the middle" between the Carvera c
 ## Limitations
 
 - Most of the functionality of the Pendant only works (by design) while the Carvera Controller is connected to the pendant software
-
+- Only `WHB04B` style pendants supported at the moment
+- Uploading large GCode files might be slower than WiFi due to the serial connection
