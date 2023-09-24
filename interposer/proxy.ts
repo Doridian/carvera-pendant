@@ -213,6 +213,6 @@ export class ProxyProvider extends EventEmitter {
             }
             this.clientDataHandler(Buffer.from('\n?\n'));
             console.log('Idle sent...');
-        }, 500);
+        }, 200);
     }
 }
