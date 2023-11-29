@@ -9,7 +9,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "node-hid": "^2.1.2",
+    "node-hid": "^3.0.0",
     "serialport": "^12.0.0"
   },
   "devDependencies": {
