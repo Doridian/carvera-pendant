@@ -176,7 +176,7 @@ export class ProxyProvider extends EventEmitter {
         this.clientDataBuffer += data.toString('utf-8');
         let newLine: number;
         while ((newLine = this.clientDataBuffer.indexOf('\n')) >= 0) {
-            let cmd = this.clientDataBuffer.substring(0, newLine).trim();
+            const cmd = this.clientDataBuffer.substring(0, newLine).trim();
             if (cmd === '?') {
                 this.lastQuestionTime = Date.now();
             }
@@ -189,7 +189,7 @@ export class ProxyProvider extends EventEmitter {
         this.deviceDataBuffer += data.toString('utf-8');
         let newLine: number;
         while ((newLine = this.deviceDataBuffer.indexOf('\n')) >= 0) {
-            let respone = this.deviceDataBuffer.substring(0, newLine).trim();
+            const respone = this.deviceDataBuffer.substring(0, newLine).trim();
             if (respone.startsWith('<') && respone.endsWith('>')) {
                 const parsedResponse = StatusReport.parse(respone);
                 this.emit('status', parsedResponse);
