@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events';
 import { Server, Socket } from 'node:net';
 import { SerialPort } from 'serialport';
+import {DelimiterParser} from 'serialport';
 
 export interface ProxyTarget {
     send(data: Buffer): void;
@@ -10,11 +11,13 @@ export interface ProxyTarget {
 
 export class SerialProxyTarget {
     private serial: SerialPort;
+    private parser: DelimiterParser;
     constructor(path: string) {
         this.serial = new SerialPort({
             path,
             baudRate: 115200,
         });
+        this.parser = this.serial.pipe(new DelimiterParser({ delimiter: '\n', includeDelimiter: true }));
     }
 
     send(data: Buffer) {
@@ -22,7 +25,7 @@ export class SerialProxyTarget {
     }
 
     register(handler: (data: Buffer) => void) {
-        this.serial.on('data', handler);
+        this.parser.on('data', handler);
     }
 
     unregister(handler: (data: Buffer) => void) {
@@ -109,8 +112,7 @@ export class ProxyProvider extends EventEmitter {
     private client?: Socket;
 
     private clientDataBuffer: string = '';
-    private deviceDataBuffer: string = '';
-
+ 
     private lastQuestionTime: number = 0;
 
     public constructor(private target: ProxyTarget, private port: number, private ip: string = '127.0.0.1') {
@@ -186,15 +188,10 @@ export class ProxyProvider extends EventEmitter {
 
     private deviceDataHandler(data: Buffer) {
         this.client?.write(data);
-        this.deviceDataBuffer += data.toString('utf-8');
-        let newLine: number;
-        while ((newLine = this.deviceDataBuffer.indexOf('\n')) >= 0) {
-            const respone = this.deviceDataBuffer.substring(0, newLine).trim();
-            if (respone.startsWith('<') && respone.endsWith('>')) {
-                const parsedResponse = StatusReport.parse(respone);
-                this.emit('status', parsedResponse);
-            }
-            this.deviceDataBuffer = this.deviceDataBuffer.substring(newLine + 1);
+        const response = data.toString('utf-8').trim();
+        if (response.startsWith('<') && response.endsWith('>')) {
+            const parsedResponse = StatusReport.parse(response);
+            this.emit('status', parsedResponse);
         }
     }
 
