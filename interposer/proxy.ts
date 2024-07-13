@@ -108,8 +108,9 @@ export class ProxyProvider extends EventEmitter {
     private server?: Server;
     private client?: Socket;
 
-    private lastCommandQuestion: boolean = false;
-    private questionBuffer: string = '';
+    private clientDataBuffer: string = '';
+    private deviceDataBuffer: string = '';
+
     private lastQuestionTime: number = 0;
 
     public constructor(private target: ProxyTarget, private port: number, private ip: string = '127.0.0.1') {
@@ -147,7 +148,7 @@ export class ProxyProvider extends EventEmitter {
             this.client.end();
         }
         this.client = socket;
-        this.lastCommandQuestion = false;
+        this.clientDataBuffer = '';
 
         socket.on('error', (err) => {
             if (this.client !== socket) {
@@ -172,30 +173,28 @@ export class ProxyProvider extends EventEmitter {
 
     private clientDataHandler(data: Buffer) {
         this.target.send(data);
-
-        const dataStr = data.toString('utf-8').trim();
-        if (dataStr === '?') {
-            this.lastCommandQuestion = true;
-            this.lastQuestionTime = Date.now();
+        this.clientDataBuffer += data.toString('utf-8');
+        let newLine: number;
+        while ((newLine = this.clientDataBuffer.indexOf('\n')) >= 0) {
+            let cmd = this.clientDataBuffer.substring(0, newLine).trim();
+            if (cmd === '?') {
+                this.lastQuestionTime = Date.now();
+            }
+            this.clientDataBuffer = this.clientDataBuffer.substring(newLine + 1);
         }
     }
 
     private deviceDataHandler(data: Buffer) {
         this.client?.write(data);
-
-        if (this.lastCommandQuestion) {
-            this.questionBuffer += data.toString('utf-8');
-            const qStart = this.questionBuffer.indexOf('<');
-            const qEnd = this.questionBuffer.indexOf('>');
-            if (qStart !== -1 && qEnd !== -1) {
-                const qAnswer = this.questionBuffer.substring(qStart + 1, qEnd);
-                
-                const parsedAnswer = StatusReport.parse(qAnswer);
-                this.emit('status', parsedAnswer);
-
-                this.lastCommandQuestion = false;
-                this.questionBuffer = '';
+        this.deviceDataBuffer += data.toString('utf-8');
+        let newLine: number;
+        while ((newLine = this.deviceDataBuffer.indexOf('\n')) >= 0) {
+            let respone = this.deviceDataBuffer.substring(0, newLine).trim();
+            if (respone.startsWith('<') && respone.endsWith('>')) {
+                const parsedResponse = StatusReport.parse(respone);
+                this.emit('status', parsedResponse);
             }
+            this.deviceDataBuffer = this.deviceDataBuffer.substring(newLine + 1);
         }
     }
 
