@@ -176,13 +176,17 @@ export class ProxyProvider extends EventEmitter {
     private clientDataHandler(data: Buffer) {
         this.target.send(data);
         this.clientDataBuffer += data.toString('utf-8');
-        let newLine: number;
-        while ((newLine = this.clientDataBuffer.indexOf('\n')) >= 0) {
-            const cmd = this.clientDataBuffer.substring(0, newLine).trim();
+        console.log(this.clientDataBuffer);
+        for (;;) {
+            const match = /[?\n]/.exec(this.clientDataBuffer);
+            if (!match) {
+                break;
+            }
+            const cmd = this.clientDataBuffer.substring(0, match.index + 1).trim();
             if (cmd === '?') {
                 this.lastQuestionTime = Date.now();
             }
-            this.clientDataBuffer = this.clientDataBuffer.substring(newLine + 1);
+            this.clientDataBuffer = this.clientDataBuffer.substring(match.index + 1);
         }
     }
 
