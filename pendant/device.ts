@@ -3,6 +3,7 @@ import { Device, HID, devices } from "node-hid";
 import { ControlReport } from "./control";
 import { DeviceReport } from "./report";
 import { CoordinateMode, DisplayFlags, Axis, FeedRate, StepMode } from "./types";
+import { exitCode } from "node:process";
 
 const PENDANT_VID = 0x10ce;
 const PENDANT_PID = 0xeb93;
@@ -64,63 +65,34 @@ export class PendantDevice extends EventEmitter {
         await this.control(packet);
     }
 
-    public async init() {
+    public init() {
         const deviceInfos = devices().filter((d: Device) => {
-            return d.vendorId == PENDANT_VID && d.productId == PENDANT_PID;
+            return d.vendorId == PENDANT_VID && d.productId == PENDANT_PID && d.path;
         });
+        if (deviceInfos.length == 0) {
+            throw new Error('No pendant dongle found');
+        } else if (deviceInfos.length != 2) {
+            throw new Error('Expected 2 pendant HID devices, found ' + deviceInfos.length);
+        }
 
-        const report = new ControlReport();
-        report.flags |= DisplayFlags.RESET;
-
-        return new Promise<void>((resolve, reject) => {
-            let startupDoneCalled = false;
-            let startupDone = () => {
-                if (startupDoneCalled) {
-                    return;
-                }
-                startupDoneCalled = true;
-
-                if (!this.readDevice) {
-                    reject(new Error('Could not find READ device'));
-                    return;
-                }
-                if (!this.writeDevice) {
-                    reject(new Error('Could not find WRITE device'));
-                    return;
-                }
-
-                this.readDevice.removeAllListeners('error');
-                this.writeDevice.removeAllListeners('error');
-
-                this.readDevice.on('data', this.handleData.bind(this));
-                this.readDevice.on('error', this.handleError.bind(this));
-                
-                if (this.writeDevice !== this.readDevice) {
-                    this.writeDevice.on('error', this.handleErrorW.bind(this));
-                }
-
-                resolve();
-            };
-        
-            for (const deviceInfo of deviceInfos) {
-                if (!deviceInfo.path) {
-                    continue;
-                }
-                const candidateDevice = new HID(deviceInfo.path);
-                candidateDevice.on('error', () => { });
-                try {
-                    report.writeTo(candidateDevice);
-                    this.writeDevice = candidateDevice;
-                } catch {}
-        
-                candidateDevice.once('data', (_: Buffer) => {
-                    this.readDevice = candidateDevice;
-                    startupDone();
-                });
+        // Sort by path, so that the read device (Col01) comes first, followed by
+        // the write device (Col02).
+        deviceInfos.sort((a, b) => {
+            if (a.path! < b.path!) {
+                return -1;
+            } else if (a.path! > b.path!) {
+                return 1;
+            } else {
+                return 0;
             }
-        
-            setTimeout(startupDone, 1000);
         });
+
+        this.readDevice = new HID(deviceInfos[0].path!);
+        this.readDevice.on('data', this.handleData.bind(this));
+        this.readDevice.on('error', this.handleError.bind(this));
+        
+        this.writeDevice = new HID(deviceInfos[1].path!);
+        this.writeDevice.on('error', this.handleError.bind(this));
     }
 
     private refreshDisplayOneshot() {
@@ -187,14 +159,6 @@ export class PendantDevice extends EventEmitter {
         } else {
             this.handleError(new Error(`Unknown report ${reportID} with data ${data}`));
         }
-    }
-
-    private handleErrorW(err: Error) {
-        if (err.message === 'could not read from HID device') {
-            // Ignore this error, we do not need to read from the write device
-            return;
-        }
-        this.handleError(err);
     }
 
     private handleError(err: Error) {

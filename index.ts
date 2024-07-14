@@ -9,10 +9,6 @@ async function main() {
     const PROXY_PORT = 9999;
 
     const pendant = new PendantDevice();
-    pendant.on('error', (err: any) => {
-        console.error(err);
-        process.exit(1);
-    });
 
     const target = new SerialProxyTarget(SERIAL_PORT);
     const proxy = new ProxyProvider(target, PROXY_PORT, PROXY_IP);
