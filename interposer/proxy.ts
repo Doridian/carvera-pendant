@@ -176,7 +176,6 @@ export class ProxyProvider extends EventEmitter {
     private clientDataHandler(data: Buffer) {
         this.target.send(data);
         this.clientDataBuffer += data.toString('utf-8');
-        console.log(this.clientDataBuffer);
         for (;;) {
             const match = /[?\n]/.exec(this.clientDataBuffer);
             if (!match) {
