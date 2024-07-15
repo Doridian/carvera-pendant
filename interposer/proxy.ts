@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events';
 import { Server, Socket } from 'node:net';
 import { SerialPort } from 'serialport';
+import {DelimiterParser} from 'serialport';
 
 export interface ProxyTarget {
     send(data: Buffer): void;
@@ -10,11 +11,13 @@ export interface ProxyTarget {
 
 export class SerialProxyTarget {
     private serial: SerialPort;
+    private parser: DelimiterParser;
     constructor(path: string) {
         this.serial = new SerialPort({
             path,
             baudRate: 115200,
         });
+        this.parser = this.serial.pipe(new DelimiterParser({ delimiter: '\n', includeDelimiter: true }));
     }
 
     send(data: Buffer) {
@@ -22,7 +25,7 @@ export class SerialProxyTarget {
     }
 
     register(handler: (data: Buffer) => void) {
-        this.serial.on('data', handler);
+        this.parser.on('data', handler);
     }
 
     unregister(handler: (data: Buffer) => void) {
@@ -109,8 +112,7 @@ export class ProxyProvider extends EventEmitter {
     private client?: Socket;
 
     private clientDataBuffer: string = '';
-    private deviceDataBuffer: string = '';
-
+ 
     private lastQuestionTime: number = 0;
 
     public constructor(private target: ProxyTarget, private port: number, private ip: string = '127.0.0.1') {
@@ -174,27 +176,25 @@ export class ProxyProvider extends EventEmitter {
     private clientDataHandler(data: Buffer) {
         this.target.send(data);
         this.clientDataBuffer += data.toString('utf-8');
-        let newLine: number;
-        while ((newLine = this.clientDataBuffer.indexOf('\n')) >= 0) {
-            const cmd = this.clientDataBuffer.substring(0, newLine).trim();
+        for (;;) {
+            const match = /[?\n]/.exec(this.clientDataBuffer);
+            if (!match) {
+                break;
+            }
+            const cmd = this.clientDataBuffer.substring(0, match.index + 1).trim();
             if (cmd === '?') {
                 this.lastQuestionTime = Date.now();
             }
-            this.clientDataBuffer = this.clientDataBuffer.substring(newLine + 1);
+            this.clientDataBuffer = this.clientDataBuffer.substring(match.index + 1);
         }
     }
 
     private deviceDataHandler(data: Buffer) {
         this.client?.write(data);
-        this.deviceDataBuffer += data.toString('utf-8');
-        let newLine: number;
-        while ((newLine = this.deviceDataBuffer.indexOf('\n')) >= 0) {
-            const respone = this.deviceDataBuffer.substring(0, newLine).trim();
-            if (respone.startsWith('<') && respone.endsWith('>')) {
-                const parsedResponse = StatusReport.parse(respone);
-                this.emit('status', parsedResponse);
-            }
-            this.deviceDataBuffer = this.deviceDataBuffer.substring(newLine + 1);
+        const response = data.toString('utf-8').trim();
+        if (response.startsWith('<') && response.endsWith('>')) {
+            const parsedResponse = StatusReport.parse(response);
+            this.emit('status', parsedResponse);
         }
     }
 

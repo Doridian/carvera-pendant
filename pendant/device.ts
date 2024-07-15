@@ -3,6 +3,7 @@ import { Device, HID, devices } from "node-hid";
 import { ControlReport } from "./control";
 import { DeviceReport } from "./report";
 import { CoordinateMode, DisplayFlags, Axis, FeedRate, StepMode } from "./types";
+import { exitCode } from "node:process";
 
 const PENDANT_VID = 0x10ce;
 const PENDANT_PID = 0xeb93;
@@ -64,63 +65,29 @@ export class PendantDevice extends EventEmitter {
         await this.control(packet);
     }
 
-    public async init() {
+    public init() {
         const deviceInfos = devices().filter((d: Device) => {
-            return d.vendorId == PENDANT_VID && d.productId == PENDANT_PID;
+            return d.vendorId == PENDANT_VID && d.productId == PENDANT_PID && d.path;
         });
+        // On Windows, there are two devices (read & write) with different paths.
+        // On Linux, there are two devices with the same path.
+        // On OSX, there is one device.
+        const uniqueDevicePaths = new Set(deviceInfos.map(di => di.path!));
+        // Sort the paths to ensure that, on Windows, the read device comes first.
+        const devicePaths = Array.from(uniqueDevicePaths).sort();
+        if (deviceInfos.length == 0) {
+            throw new Error('No pendant dongle found');
+        } else if (devicePaths.length != 1 && devicePaths.length != 2) {
+            throw new Error('Expected 1 or 2 pendant HID devices, found ' +
+                devicePaths.length + ': ' + devicePaths);
+        }
 
-        const report = new ControlReport();
-        report.flags |= DisplayFlags.RESET;
-
-        return new Promise<void>((resolve, reject) => {
-            let startupDoneCalled = false;
-            let startupDone = () => {
-                if (startupDoneCalled) {
-                    return;
-                }
-                startupDoneCalled = true;
-
-                if (!this.readDevice) {
-                    reject(new Error('Could not find READ device'));
-                    return;
-                }
-                if (!this.writeDevice) {
-                    reject(new Error('Could not find WRITE device'));
-                    return;
-                }
-
-                this.readDevice.removeAllListeners('error');
-                this.writeDevice.removeAllListeners('error');
-
-                this.readDevice.on('data', this.handleData.bind(this));
-                this.readDevice.on('error', this.handleError.bind(this));
-                
-                if (this.writeDevice !== this.readDevice) {
-                    this.writeDevice.on('error', this.handleErrorW.bind(this));
-                }
-
-                resolve();
-            };
+        this.readDevice = new HID(devicePaths[0]);
+        this.readDevice.on('data', this.handleData.bind(this));
+        this.readDevice.on('error', this.handleError.bind(this));
         
-            for (const deviceInfo of deviceInfos) {
-                if (!deviceInfo.path) {
-                    continue;
-                }
-                const candidateDevice = new HID(deviceInfo.path);
-                candidateDevice.on('error', () => { });
-                try {
-                    report.writeTo(candidateDevice);
-                    this.writeDevice = candidateDevice;
-                } catch {}
-        
-                candidateDevice.once('data', (_: Buffer) => {
-                    this.readDevice = candidateDevice;
-                    startupDone();
-                });
-            }
-        
-            setTimeout(startupDone, 1000);
-        });
+        this.writeDevice = new HID(devicePaths[devicePaths.length - 1]);
+        this.writeDevice.on('error', this.handleError.bind(this));
     }
 
     private refreshDisplayOneshot() {
@@ -187,14 +154,6 @@ export class PendantDevice extends EventEmitter {
         } else {
             this.handleError(new Error(`Unknown report ${reportID} with data ${data}`));
         }
-    }
-
-    private handleErrorW(err: Error) {
-        if (err.message === 'could not read from HID device') {
-            // Ignore this error, we do not need to read from the write device
-            return;
-        }
-        this.handleError(err);
     }
 
     private handleError(err: Error) {
