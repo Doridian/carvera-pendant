@@ -69,29 +69,24 @@ export class PendantDevice extends EventEmitter {
         const deviceInfos = devices().filter((d: Device) => {
             return d.vendorId == PENDANT_VID && d.productId == PENDANT_PID && d.path;
         });
+        // On Windows, there are two devices (read & write) with different paths.
+        // On Linux, there are two devices with the same path.
+        // On OSX, there is one device.
+        const uniqueDevicePaths = new Set(deviceInfos.map(di => di.path!));
+        // Sort the paths to ensure that, on Windows, the read device comes first.
+        const devicePaths = Array.from(uniqueDevicePaths).sort();
         if (deviceInfos.length == 0) {
             throw new Error('No pendant dongle found');
-        } else if (deviceInfos.length != 2) {
-            throw new Error('Expected 2 pendant HID devices, found ' + deviceInfos.length);
+        } else if (devicePaths.length != 1 && devicePaths.length != 2) {
+            throw new Error('Expected 1 or 2 pendant HID devices, found ' +
+                devicePaths.length + ': ' + devicePaths);
         }
 
-        // Sort by path, so that the read device (Col01) comes first, followed by
-        // the write device (Col02).
-        deviceInfos.sort((a, b) => {
-            if (a.path! < b.path!) {
-                return -1;
-            } else if (a.path! > b.path!) {
-                return 1;
-            } else {
-                return 0;
-            }
-        });
-
-        this.readDevice = new HID(deviceInfos[0].path!);
+        this.readDevice = new HID(devicePaths[0]);
         this.readDevice.on('data', this.handleData.bind(this));
         this.readDevice.on('error', this.handleError.bind(this));
         
-        this.writeDevice = new HID(deviceInfos[1].path!);
+        this.writeDevice = new HID(devicePaths[devicePaths.length - 1]);
         this.writeDevice.on('error', this.handleError.bind(this));
     }
 
