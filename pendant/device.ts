@@ -117,12 +117,14 @@ export class PendantDevice extends EventEmitter {
 
         for (const button of report.buttons) {
             if (!this.pressedButtons.has(button)) {
+                console.debug('button_down:', button);
                 this.emit('button_down', button);
             }
         }
 
         for (const oldButton of this.pressedButtons) {
             if (!report.buttons.has(oldButton)) {
+                console.debug('button_up:', oldButton);
                 this.emit('button_up', oldButton);
             }
         }
@@ -134,6 +136,7 @@ export class PendantDevice extends EventEmitter {
                 rate: report.feedRate,
                 stepMode: this.stepMode,
             };
+            console.debug('jog', jogReport);
             this.emit('jog', jogReport);
         }
 

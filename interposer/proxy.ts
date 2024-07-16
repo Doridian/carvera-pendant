@@ -199,6 +199,7 @@ export class ProxyProvider extends EventEmitter {
         const status = StatusReport.extractLast(this.deviceDataBuffer);
         if (status) {
             this.lastStatusReportTime = Date.now();
+            console.debug(status);
             this.emit('status', status);
         }
     }
