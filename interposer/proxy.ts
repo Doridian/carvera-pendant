@@ -177,14 +177,12 @@ export class ProxyProvider extends EventEmitter {
 
     private deviceDataBuffer: string = '';
  
-    private lastStatusReportTime: number = 0;
-    
     private timer: NodeJS.Timeout;
 
     public constructor(private target: ProxyTarget, private port: number, private ip: string) {
         super();
         this.deviceDataHandler = this.deviceDataHandler.bind(this);
-        // When there is no client connect, periodically send our own status requests.
+        // When there is no client connected, periodically send our own status requests.
         this.timer = setInterval(() => {
             if (this.client === undefined) {
                 this.inject('?');
@@ -237,7 +235,6 @@ export class ProxyProvider extends EventEmitter {
         this.deviceDataBuffer = this.deviceDataBuffer.slice(-160); // long enough for a status report
         const status = StatusReport.extractLast(this.deviceDataBuffer);
         if (status) {
-            this.lastStatusReportTime = Date.now();
             console.debug(status);
             this.emit('status', status);
         }
