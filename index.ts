@@ -1,5 +1,6 @@
 import { Config } from './config';
 import { DiscoveryProvider } from "./interposer/discovery";
+import { getNetworkAddresses, getNetworkInterfaces } from './interposer/net';
 import { ProxyProvider, SerialProxyTarget, StatusReport } from "./interposer/proxy";
 import { JogReport, PendantDevice } from "./pendant/device";
 import { Axis, CoordinateMode, FeedRate, StepMode } from "./pendant/types";
@@ -15,6 +16,10 @@ async function main() {
     const target = new SerialProxyTarget(SERIAL_PORT);
     target.send(Buffer.from('?'));  // Query machine status
 
+    if (Config.PROXY_IP && !getNetworkAddresses().includes(Config.PROXY_IP)) {
+        console.error(`PROXY_IP must either be blank or one of ${getNetworkAddresses()} (got ${Config.PROXY_IP})`);
+        process.exit(1);
+    }
     const proxy = new ProxyProvider(target, Config.PROXY_PORT, Config.PROXY_IP);
     const discovery = new DiscoveryProvider('Pendant', Config.PROXY_IP, Config.PROXY_PORT, proxy);
 
@@ -185,4 +190,7 @@ async function main() {
     console.log('System online!');
 }
 
+if (!Config.DEBUG_LOGGING) {
+    console.debug = function() {}
+}
 main().catch(console.error);

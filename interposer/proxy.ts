@@ -128,7 +128,7 @@ export class ProxyProvider extends EventEmitter {
  
     private lastStatusReportTime: number = 0;
 
-    public constructor(private target: ProxyTarget, private port: number, private ip: string = '127.0.0.1') {
+    public constructor(private target: ProxyTarget, private port: number, private ip: string) {
         super();
         this.deviceDataHandler = this.deviceDataHandler.bind(this);
     }
