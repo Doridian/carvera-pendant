@@ -232,7 +232,7 @@ export class ProxyProvider extends EventEmitter {
     private deviceDataHandler(data: Buffer) {
         this.client?.write(data);
         this.deviceDataBuffer += data.toString('utf-8');
-        this.deviceDataBuffer = this.deviceDataBuffer.slice(-160); // long enough for a status report
+        this.deviceDataBuffer = this.deviceDataBuffer.slice(-300); // long enough for a status report
         const status = StatusReport.extractLast(this.deviceDataBuffer);
         if (status) {
             console.debug(status);
