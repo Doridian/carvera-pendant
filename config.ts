@@ -1,4 +1,6 @@
 export class Config {
+    public static readonly ADVERTISED_NAME = 'Pendant';
+    
     public static readonly CARVERA_SERIAL_PORT = '';
  
     public static readonly CARVERA_HOST_NAME = '';

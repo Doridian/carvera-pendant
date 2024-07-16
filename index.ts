@@ -24,7 +24,7 @@ async function main() {
         process.exit(1);
     }
     const proxy = new ProxyProvider(target, Config.PROXY_PORT, Config.PROXY_IP);
-    const discovery = new DiscoveryProvider('Pendant', Config.PROXY_IP, Config.PROXY_PORT, proxy);
+    const discovery = new DiscoveryProvider(Config.ADVERTISED_NAME, Config.PROXY_IP, Config.PROXY_PORT, proxy);
 
     proxy.start();
     discovery.start();
