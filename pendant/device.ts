@@ -2,8 +2,7 @@ import { EventEmitter } from "node:events";
 import { Device, HID, devices } from "node-hid";
 import { ControlReport } from "./control";
 import { DeviceReport } from "./report";
-import { CoordinateMode, DisplayFlags, Axis, FeedRate, StepMode } from "./types";
-import { exitCode } from "node:process";
+import { CoordinateMode, Axis, FeedRate, StepMode } from "./types";
 
 const PENDANT_VID = 0x10ce;
 const PENDANT_PID = 0xeb93;
