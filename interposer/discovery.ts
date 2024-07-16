@@ -16,7 +16,9 @@ export class DiscoveryProvider {
             if (!this.ip || netif.ipv4 == this.ip) {
                 const msg = `${this.machine},${netif.ipv4},${this.port},${this.busyHandler?.isBusy() ? '1' : '0'}`;
                 const socket = createSocket('udp4');
-                socket.send(msg, 3333, netif.broadcast_addr);
+                socket.send(msg, 3333, netif.broadcast_addr, () => {
+                    socket.close();
+                });
                 console.debug(`bcast to ${netif.broadcast_addr}: ${msg}`);
             }
         }
