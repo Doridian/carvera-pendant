@@ -70,8 +70,24 @@ export class StatusReport {
 
     laserTesting: boolean = false;
 
+    // If the arg contains at least one Carvera status report (query string in Smoothieware
+    // parlance), extract and return the last one.  Otherwise return undefined.
+    public static extractLast(data: string): StatusReport | undefined {
+        const matches = [...data.matchAll(/<(Sleep|Pause|Wait|Alarm|Home|Hold|Idle|Run)[|].*?>/g)];
+        if (matches.length > 0) {
+            return StatusReport.parse(matches[matches.length - 1][0])
+        }
+    }
+
     public static parse(data: string): StatusReport {
         const res = new StatusReport();
+
+        if (data.startsWith('<')) {
+            data = data.slice(1);
+        }
+        if (data.endsWith('>')) {
+            data = data.slice(0, -1);
+        }
 
         const split = data.split('|');
         res.state = split[0];
@@ -111,9 +127,9 @@ export class ProxyProvider extends EventEmitter {
     private server?: Server;
     private client?: Socket;
 
-    private clientDataBuffer: string = '';
+    private deviceDataBuffer: string = '';
  
-    private lastQuestionTime: number = 0;
+    private lastStatusReportTime: number = 0;
 
     public constructor(private target: ProxyTarget, private port: number, private ip: string = '127.0.0.1') {
         super();
@@ -128,7 +144,7 @@ export class ProxyProvider extends EventEmitter {
         if (this.client === undefined) {
             return false;
         }
-        if ((Date.now() - this.lastQuestionTime) > 1000) {
+        if ((Date.now() - this.lastStatusReportTime) > 1000) {
             return false;
         }
         return true;
@@ -150,7 +166,6 @@ export class ProxyProvider extends EventEmitter {
             this.client.end();
         }
         this.client = socket;
-        this.clientDataBuffer = '';
 
         socket.on('error', (err) => {
             if (this.client !== socket) {
@@ -175,26 +190,16 @@ export class ProxyProvider extends EventEmitter {
 
     private clientDataHandler(data: Buffer) {
         this.target.send(data);
-        this.clientDataBuffer += data.toString('utf-8');
-        for (;;) {
-            const match = /[?\n]/.exec(this.clientDataBuffer);
-            if (!match) {
-                break;
-            }
-            const cmd = this.clientDataBuffer.substring(0, match.index + 1).trim();
-            if (cmd === '?') {
-                this.lastQuestionTime = Date.now();
-            }
-            this.clientDataBuffer = this.clientDataBuffer.substring(match.index + 1);
-        }
     }
 
     private deviceDataHandler(data: Buffer) {
         this.client?.write(data);
-        const response = data.toString('utf-8').trim();
-        if (response.startsWith('<') && response.endsWith('>')) {
-            const parsedResponse = StatusReport.parse(response);
-            this.emit('status', parsedResponse);
+        this.deviceDataBuffer += data.toString('utf-8');
+        this.deviceDataBuffer = this.deviceDataBuffer.slice(-160); // long enough for a status report
+        const status = StatusReport.extractLast(this.deviceDataBuffer);
+        if (status) {
+            this.lastStatusReportTime = Date.now();
+            this.emit('status', status);
         }
     }
 
