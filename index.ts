@@ -11,6 +11,7 @@ async function main() {
     const pendant = new PendantDevice();
 
     const target = new SerialProxyTarget(SERIAL_PORT);
+    target.send(Buffer.from('?'));
     const proxy = new ProxyProvider(target, PROXY_PORT, PROXY_IP);
     const discovery = new DiscoveryProvider('Pendant', PROXY_IP, PROXY_PORT, proxy);
 
