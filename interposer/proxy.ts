@@ -1,7 +1,6 @@
 import EventEmitter from 'node:events';
 import { Server, Socket } from 'node:net';
 import { SerialPort } from 'serialport';
-import {DelimiterParser} from 'serialport';
 
 export interface ProxyTarget {
     send(data: Buffer): void;
@@ -11,13 +10,11 @@ export interface ProxyTarget {
 
 export class SerialProxyTarget {
     private serial: SerialPort;
-    private parser: DelimiterParser;
     constructor(path: string) {
         this.serial = new SerialPort({
             path,
             baudRate: 115200,
         });
-        this.parser = this.serial.pipe(new DelimiterParser({ delimiter: '\n', includeDelimiter: true }));
     }
 
     send(data: Buffer) {
@@ -25,7 +22,7 @@ export class SerialProxyTarget {
     }
 
     register(handler: (data: Buffer) => void) {
-        this.parser.on('data', handler);
+        this.serial.on('data', handler);
     }
 
     unregister(handler: (data: Buffer) => void) {
