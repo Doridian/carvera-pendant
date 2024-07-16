@@ -75,10 +75,11 @@ export class PendantDevice extends EventEmitter {
         // Sort the paths to ensure that, on Windows, the read device comes first.
         const devicePaths = Array.from(uniqueDevicePaths).sort();
         if (deviceInfos.length == 0) {
-            throw new Error('No pendant dongle found');
+            console.error('No pendant dongle found');
+            process.exit(1);
         } else if (devicePaths.length != 1 && devicePaths.length != 2) {
-            throw new Error('Expected 1 or 2 pendant HID devices, found ' +
-                devicePaths.length + ': ' + devicePaths);
+            console.error(`Expected 1 or 2 pendant HID devices, found ${devicePaths.length}: ${devicePaths}`);
+            process.exit(1);
         }
 
         this.readDevice = new HID(devicePaths[0]);

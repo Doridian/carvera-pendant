@@ -1,7 +1,7 @@
 import { Config } from './config';
 import { DiscoveryProvider } from "./interposer/discovery";
 import { getNetworkAddresses, getNetworkInterfaces } from './interposer/net';
-import { ProxyProvider, SerialProxyTarget, StatusReport } from "./interposer/proxy";
+import { ProxyProvider, SerialProxyTarget, StatusReport, WlanProxyTarget } from "./interposer/proxy";
 import { JogReport, PendantDevice } from "./pendant/device";
 import { Axis, CoordinateMode, FeedRate, StepMode } from "./pendant/types";
 
@@ -9,11 +9,14 @@ async function main() {
     const pendant = new PendantDevice();
 
     const SERIAL_PORT = process.env.CARVERA_SERIAL_PORT || Config.CARVERA_SERIAL_PORT;
-    if (!SERIAL_PORT) {
-        console.error('CARVERA_SERIAL_PORT must be set');
+    if (!SERIAL_PORT == !Config.CARVERA_HOST_NAME) {
+        console.error('Exactly one of CARVERA_SERIAL_PORT and CARVERA_HOST_NAME must be set');
         process.exit(1);
     }
-    const target = new SerialProxyTarget(SERIAL_PORT);
+
+    const target = SERIAL_PORT ?
+        new SerialProxyTarget(SERIAL_PORT) :
+        new WlanProxyTarget(Config.CARVERA_HOST_NAME, Config.CARVERA_PORT);
     target.send(Buffer.from('?'));  // Query machine status
 
     if (Config.PROXY_IP && !getNetworkAddresses().includes(Config.PROXY_IP)) {
@@ -26,7 +29,7 @@ async function main() {
     proxy.start();
     discovery.start();
 
-    await pendant.init();
+    pendant.init();
     pendant.stepMode = StepMode.STEP;
     pendant.coordinateMode = CoordinateMode.MACHINE;
 
@@ -69,7 +72,7 @@ async function main() {
                 break;
         }
 
-        proxy.injectWhenAlive(`$J ${axisName}${jogAmount.toFixed(4)}\n`);
+        proxy.inject(`$J ${axisName}${jogAmount.toFixed(4)}\n`);
     });
 
     pendant.on('button_up', (button: number) => {
@@ -101,26 +104,26 @@ async function main() {
                 break;
 
             case 8: // M-Home
-                proxy.injectWhenAlive('G28\n');
+                proxy.inject('G28\n');
                 break;
             case 9: // Safe-Z
-                proxy.injectWhenAlive('G90\nG53 G0 Z-1\n');
+                proxy.inject('G90\nG53 G0 Z-1\n');
                 break;
             case 10: // W-Home
-                proxy.injectWhenAlive('G90\nG53 G0 Z-1\nG54 G0 X0 Y0\n');
+                proxy.inject('G90\nG53 G0 Z-1\nG54 G0 X0 Y0\n');
                 break;
             case 11: // S-ON/OFF
                 if (currentStatus.laserTesting) {
-                    proxy.injectWhenAlive('M324\nM322\n');
+                    proxy.inject('M324\nM322\n');
                 } else {
-                    proxy.injectWhenAlive('M321\nM323\n');
+                    proxy.inject('M321\nM323\n');
                 }
                 break;
             case 12: // Fn
                 break;
 
             case 13: // Probe-Z
-                proxy.injectWhenAlive('G38.2 Z-152.200 F500.000\n');
+                proxy.inject('G38.2 Z-152.200 F500.000\n');
                 break;
 
             case 14: // Continuous
@@ -156,7 +159,7 @@ async function main() {
                         axis = 'C';
                         break;
                 }
-                proxy.injectWhenAlive(`G10 L20 P0 ${axis}0\n`);
+                proxy.inject(`G10 L20 P0 ${axis}0\n`);
                 break;
         }
     });

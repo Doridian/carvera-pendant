@@ -8,7 +8,7 @@ export interface ProxyTarget {
     unregister(handler: (data: Buffer) => void): void;
 }
 
-export class SerialProxyTarget {
+export class SerialProxyTarget implements ProxyTarget {
     private serial: SerialPort;
     constructor(path: string) {
         this.serial = new SerialPort({
@@ -27,6 +27,57 @@ export class SerialProxyTarget {
 
     unregister(handler: (data: Buffer) => void) {
         this.serial.off('data', handler);
+    }
+}
+
+export class WlanProxyTarget implements ProxyTarget {
+    private socket?: Socket;
+    private timer?: NodeJS.Timeout;
+    private handler?: (data: Buffer) => void;
+
+    constructor(private carvera_hostname: string, private carvera_port: number) {
+        this.connect();
+        this.timer = setInterval(() => {
+            this.connect();
+        }, 10000);
+    }
+
+    public send(data: Buffer): void {
+        if (this.socket) {
+            this.socket.write(data);
+        }
+    }
+
+    public register(handler: (data: Buffer) => void): void {
+        this.handler = handler;
+    }
+
+    public unregister(handler: (data: Buffer) => void): void {
+        this.handler = undefined;
+    }
+
+    private connect() {
+        if (this.socket) {
+            return;
+        }
+        console.debug(`connecting to ${this.carvera_hostname}:${this.carvera_port}`)
+        this.socket = new Socket();
+        this.socket.connect(this.carvera_port, this.carvera_hostname, () => {
+            console.debug(`connected to ${this.carvera_hostname}:${this.carvera_port}`)
+        });
+        this.socket.on('data', (data) => {
+            if (this.handler) {
+                this.handler(data);
+            }
+        });    
+        this.socket.on('close', () => {
+            console.debug()
+            this.socket = undefined;
+        });
+        this.socket.on('error', (err) => {
+            console.error(err);
+            this.socket = undefined;
+        });
     }
 }
 
@@ -127,35 +178,26 @@ export class ProxyProvider extends EventEmitter {
     private deviceDataBuffer: string = '';
  
     private lastStatusReportTime: number = 0;
+    
+    private timer: NodeJS.Timeout;
 
     public constructor(private target: ProxyTarget, private port: number, private ip: string) {
         super();
         this.deviceDataHandler = this.deviceDataHandler.bind(this);
+        // When there is no client connect, periodically send our own status requests.
+        this.timer = setInterval(() => {
+            if (this.client === undefined) {
+                this.inject('?');
+            }
+        }, 500);
     }
 
     public isBusy() {
         return this.client !== undefined;
     }
 
-    public isClientAlive() {
-        if (this.client === undefined) {
-            return false;
-        }
-        if ((Date.now() - this.lastStatusReportTime) > 1000) {
-            return false;
-        }
-        return true;
-    }
-
     public inject(command: string) {
         this.target.send(Buffer.from(command));
-    }
-
-    public injectWhenAlive(command: string) {
-        if (!this.isClientAlive()) {
-            return;
-        }
-        this.inject(command);
     }
 
     private clientHandler(socket: Socket) {
