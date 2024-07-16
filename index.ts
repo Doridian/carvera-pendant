@@ -1,19 +1,22 @@
+import { Config } from './config';
 import { DiscoveryProvider } from "./interposer/discovery";
 import { ProxyProvider, SerialProxyTarget, StatusReport } from "./interposer/proxy";
 import { JogReport, PendantDevice } from "./pendant/device";
 import { Axis, CoordinateMode, FeedRate, StepMode } from "./pendant/types";
 
 async function main() {
-    const SERIAL_PORT = process.env.CARVERA_SERIAL_PORT || '';
-    const PROXY_IP = '127.0.0.1';
-    const PROXY_PORT = 9999;
-
     const pendant = new PendantDevice();
 
+    const SERIAL_PORT = process.env.CARVERA_SERIAL_PORT || Config.CARVERA_SERIAL_PORT;
+    if (!SERIAL_PORT) {
+        console.error('CARVERA_SERIAL_PORT must be set');
+        process.exit(1);
+    }
     const target = new SerialProxyTarget(SERIAL_PORT);
-    target.send(Buffer.from('?'));
-    const proxy = new ProxyProvider(target, PROXY_PORT, PROXY_IP);
-    const discovery = new DiscoveryProvider('Pendant', PROXY_IP, PROXY_PORT, proxy);
+    target.send(Buffer.from('?'));  // Query machine status
+
+    const proxy = new ProxyProvider(target, Config.PROXY_PORT, Config.PROXY_IP);
+    const discovery = new DiscoveryProvider('Pendant', Config.PROXY_IP, Config.PROXY_PORT, proxy);
 
     proxy.start();
     discovery.start();
