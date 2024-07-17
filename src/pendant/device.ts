@@ -1,12 +1,12 @@
-import { EventEmitter } from "node:events";
-import { Device, HID, devices } from "node-hid";
-import { ControlReport } from "./control";
-import { DeviceReport } from "./report";
-import { CoordinateMode, Axis, FeedRate, StepMode } from "./types";
-import { logger } from "../log";
+import { EventEmitter } from 'node:events';
+import { Device, devices, HID } from 'node-hid';
+import { logger } from '../log';
+import { ControlReport } from './control';
+import { DeviceReport } from './report';
+import { Axis, CoordinateMode, FeedRate, StepMode } from './types';
 
-const PENDANT_VID = 0x10ce;
-const PENDANT_PID = 0xeb93;
+const PENDANT_VID = 0x10_ce;
+const PENDANT_PID = 0xeb_93;
 
 export interface JogReport {
     stepMode: StepMode;
@@ -18,6 +18,7 @@ export interface JogReport {
 const DISPLAY_AXIS_XYZ = [Axis.X, Axis.Y, Axis.Z];
 const DISPLAY_AXIS_ABC = [Axis.A, Axis.B, Axis.C];
 
+// eslint-disable-next-line unicorn/prefer-event-target
 export class PendantDevice extends EventEmitter {
     // Displayed data
     public axisCoordinates: { [key in Axis]: number } = {
@@ -28,8 +29,8 @@ export class PendantDevice extends EventEmitter {
         [Axis.B]: 0,
         [Axis.C]: 0,
     };
-    public feedRate: number = 0;
-    public spindleSpeed: number = 0;
+    public feedRate = 0;
+    public spindleSpeed = 0;
 
     public coordinateMode: CoordinateMode = CoordinateMode.MACHINE;
     public stepMode: StepMode = StepMode.CONT;
@@ -37,7 +38,7 @@ export class PendantDevice extends EventEmitter {
     public selectedAxis: Axis = Axis.C;
 
     // Control state
-    private pressedButtons: Set<number> = new Set();
+    private pressedButtons = new Set<number>();
 
     // Internal state
     private axisLines: Axis[] = DISPLAY_AXIS_XYZ;
@@ -49,50 +50,59 @@ export class PendantDevice extends EventEmitter {
         super();
     }
 
-    public async control(packet: ControlReport) {
+    public control(packet: ControlReport): void {
         if (!this.writeDevice) {
             throw new Error('Cannot control unopened device');
         }
+
         packet.writeTo(this.writeDevice);
     }
 
-    public async refreshDisplay() {
+    public refreshDisplay(): void {
         const packet = new ControlReport();
+        // eslint-disable-next-line no-bitwise
         packet.flags = this.stepMode | this.coordinateMode;
         packet.feedRate = this.feedRate;
         packet.spindleSpeed = this.spindleSpeed;
-        packet.coordinates = this.axisLines.map(axis => this.axisCoordinates[axis]);
-        await this.control(packet);
+        packet.coordinates = this.axisLines.map((axis) => this.axisCoordinates[axis]);
+        this.control(packet);
     }
 
-    public init() {
+    public init(): void {
         const deviceInfos = devices().filter((d: Device) => {
-            return d.vendorId == PENDANT_VID && d.productId == PENDANT_PID && d.path;
+            return d.vendorId === PENDANT_VID && d.productId === PENDANT_PID && d.path;
         });
-        // On Windows, there are two devices (read & write) with different paths.
-        // On Linux, there are two devices with the same path.
-        // On OSX, there is one device.
-        const uniqueDevicePaths = new Set(deviceInfos.map(di => di.path!));
+
+        /*
+         * On Windows, there are two devices (read & write) with different paths.
+         * On Linux, there are two devices with the same path.
+         * On OSX, there is one device.
+         */
+        const uniqueDevicePaths = new Set(deviceInfos.map((di) => di.path ?? ''));
         // Sort the paths to ensure that, on Windows, the read device comes first.
         const devicePaths = Array.from(uniqueDevicePaths).sort();
-        if (deviceInfos.length == 0) {
+        if (deviceInfos.length === 0) {
             logger.error('No pendant dongle found');
             process.exit(1);
-        } else if (devicePaths.length != 1 && devicePaths.length != 2) {
-            logger.error(`Expected 1 or 2 pendant HID devices, found ${devicePaths.length}: ${devicePaths}`);
+        } else if (devicePaths.length < 1 || devicePaths.length > 2) {
+            logger.error(`Expected 1 or 2 pendant HID devices, found ${devicePaths.length}: ${devicePaths.join(', ')}`);
             process.exit(1);
         }
 
-        this.readDevice = new HID(devicePaths[0]);
+        this.readDevice = new HID(devicePaths[0] ?? '');
         this.readDevice.on('data', this.handleData.bind(this));
         this.readDevice.on('error', this.handleError.bind(this));
-        
-        this.writeDevice = new HID(devicePaths[devicePaths.length - 1]);
+
+        this.writeDevice = new HID(devicePaths.at(-1) ?? '');
         this.writeDevice.on('error', this.handleError.bind(this));
     }
 
     private refreshDisplayOneshot() {
-        this.refreshDisplay().catch(this.handleError.bind(this));
+        try {
+            this.handleError.bind(this);
+        } catch (error) {
+            this.handleError(error as Error);
+        }
     }
 
     private handleReport(report: DeviceReport) {
@@ -137,7 +147,8 @@ export class PendantDevice extends EventEmitter {
                 rate: report.feedRate,
                 stepMode: this.stepMode,
             };
-            logger.debug(`jog: ${jogReport}`);
+
+            logger.debug(`jog: ${JSON.stringify(jogReport)}`);
             this.emit('jog', jogReport);
         }
 
@@ -149,14 +160,14 @@ export class PendantDevice extends EventEmitter {
     }
 
     private handleData(data: Buffer) {
-        const reportID = data[0];
+        const reportID = data[0] ?? 0;
         data = data.subarray(1);
-        if (reportID == 0x04) {
+        if (reportID === 0x04) {
             const report = new DeviceReport(data);
             this.handleReport(report);
             this.emit('report', report);
         } else {
-            this.handleError(new Error(`Unknown report ${reportID} with data ${data}`));
+            this.handleError(new Error(`Unknown report ${reportID} with data ${data.toString('hex')}`));
         }
     }
 

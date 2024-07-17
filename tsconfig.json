@@ -1,0 +1,36 @@
+{
+    "ts-node": {
+        "compilerOptions": {
+            "module": "commonjs"
+        }
+    },
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ES2022",
+        "lib": ["DOM", "ES2022"],
+        "declaration": false,
+        "declarationMap": false,
+        "sourceMap": true,
+        "inlineSources": true,
+        "outDir": "dist",
+        "removeComments": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noUncheckedIndexedAccess": true,
+        "allowJs": false,
+        "esModuleInterop": true,
+        "jsx": "react-jsx",
+        "types": [],
+        "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": false,
+        "typeRoots": ["node_modules/@types", "types"]
+    },
+    "include": ["src"]
+}

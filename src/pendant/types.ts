@@ -8,18 +8,18 @@ export const enum Axis {
 }
 
 export const enum DisplayFlags {
-    STEP_MODE_CONT    = 0,
-    STEP_MODE_STEP    = 1,
-    STEP_MODE_MPG     = 2,
+    STEP_MODE_CONT = 0,
+    STEP_MODE_STEP = 1,
+    STEP_MODE_MPG = 2,
     STEP_MODE_PERCENT = 3,
 
-    RESET             = 0b01000000,
+    RESET = 0b0100_0000,
 
-    MACHINE_COORDS    = 0b00000000,
-    WORK_COORDS       = 0b10000000,
+    MACHINE_COORDS = 0b0000_0000,
+    WORK_COORDS = 0b1000_0000,
 
-    NONE              = 0b00000000,
-    ALL               = 0b11111111,
+    NONE = 0b0000_0000,
+    ALL = 0b1111_1111,
 }
 
 export const enum FeedRate {
@@ -43,13 +43,13 @@ export const enum FeedRate {
 }
 
 export const enum StepMode {
-    CONT    = DisplayFlags.STEP_MODE_CONT,
-    STEP    = DisplayFlags.STEP_MODE_STEP,
-    MPG     = DisplayFlags.STEP_MODE_MPG,
+    CONT = DisplayFlags.STEP_MODE_CONT,
+    STEP = DisplayFlags.STEP_MODE_STEP,
+    MPG = DisplayFlags.STEP_MODE_MPG,
     PERCENT = DisplayFlags.STEP_MODE_PERCENT,
 }
 
 export const enum CoordinateMode {
     MACHINE = DisplayFlags.MACHINE_COORDS,
-    WORK    = DisplayFlags.WORK_COORDS,
+    WORK = DisplayFlags.WORK_COORDS,
 }

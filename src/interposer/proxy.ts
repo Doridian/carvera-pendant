@@ -3,44 +3,46 @@ import { Server, Socket } from 'node:net';
 import { SerialPort } from 'serialport';
 import { logger } from '../log';
 
-export interface ProxyTarget {
+interface ProxyTarget {
     send(data: Buffer): void;
     register(handler: (data: Buffer) => void): void;
     unregister(handler: (data: Buffer) => void): void;
 }
 
 export class SerialProxyTarget implements ProxyTarget {
-    private serial: SerialPort;
-    constructor(path: string) {
+    private readonly serial: SerialPort;
+    public constructor(path: string) {
         this.serial = new SerialPort({
             path,
-            baudRate: 115200,
+            baudRate: 115_200,
         });
     }
 
-    send(data: Buffer) {
+    public send(data: Buffer): void {
         this.serial.write(data);
     }
 
-    register(handler: (data: Buffer) => void) {
+    public register(handler: (data: Buffer) => void): void {
         this.serial.on('data', handler);
     }
 
-    unregister(handler: (data: Buffer) => void) {
+    public unregister(handler: (data: Buffer) => void): void {
         this.serial.off('data', handler);
     }
 }
 
 export class WlanProxyTarget implements ProxyTarget {
     private socket?: Socket;
-    private timer?: NodeJS.Timeout;
     private handler?: (data: Buffer) => void;
 
-    constructor(private carvera_hostname: string, private carvera_port: number) {
+    public constructor(
+        private readonly carvera_hostname: string,
+        private readonly carvera_port: number,
+    ) {
         this.connect();
-        this.timer = setInterval(() => {
+        setInterval(() => {
             this.connect();
-        }, 10000);
+        }, 10_000);
     }
 
     public send(data: Buffer): void {
@@ -53,7 +55,7 @@ export class WlanProxyTarget implements ProxyTarget {
         this.handler = handler;
     }
 
-    public unregister(handler: (data: Buffer) => void): void {
+    public unregister(): void {
         this.handler = undefined;
     }
 
@@ -61,20 +63,24 @@ export class WlanProxyTarget implements ProxyTarget {
         if (this.socket) {
             return;
         }
-        logger.debug(`connecting to ${this.carvera_hostname}:${this.carvera_port}`)
+
+        logger.debug(`connecting to ${this.carvera_hostname}:${this.carvera_port}`);
         this.socket = new Socket();
         this.socket.connect(this.carvera_port, this.carvera_hostname, () => {
-            logger.debug(`connected to ${this.carvera_hostname}:${this.carvera_port}`)
+            logger.debug(`connected to ${this.carvera_hostname}:${this.carvera_port}`);
         });
+
         this.socket.on('data', (data) => {
             if (this.handler) {
                 this.handler(data);
             }
-        });    
+        });
+
         this.socket.on('close', () => {
-            logger.debug('carvera socket closed')
+            logger.debug('carvera socket closed');
             this.socket = undefined;
         });
+
         this.socket.on('error', (err) => {
             logger.error(err);
             this.socket = undefined;
@@ -83,49 +89,53 @@ export class WlanProxyTarget implements ProxyTarget {
 }
 
 /*
-Idle|
-
-MPos:-329.6600,-216.0100,-1.0000,0.0000,0.0000|
-MPos:X,Y,Z,A,-,-|
-
-WPos:0.0000,0.0000,96.4050|
-WPos:X,Y,Z|
-
-F:0.0,3000.0,100.0|
-F:current,target,overall
-
-S:0.0,10000.0,100.0,1,24.3|
-S:current,target,overall,vacuummode,spindletemp|
-
-W:4.10|
-W:???|
-
-L:0, 0, 0, 0.0,100.0
-L:mode,state,testing,power,scale|
-*/
+ *Idle|
+ *
+ *MPos:-329.6600,-216.0100,-1.0000,0.0000,0.0000|
+ *MPos:X,Y,Z,A,-,-|
+ *
+ *WPos:0.0000,0.0000,96.4050|
+ *WPos:X,Y,Z|
+ *
+ *F:0.0,3000.0,100.0|
+ *F:current,target,overall
+ *
+ *S:0.0,10000.0,100.0,1,24.3|
+ *S:current,target,overall,vacuummode,spindletemp|
+ *
+ *W:4.10|
+ *W:???|
+ *
+ *L:0, 0, 0, 0.0,100.0
+ *L:mode,state,testing,power,scale|
+ */
 
 export class StatusReport {
-    mpos: number[] = [];
-    wpos: number[] = [];
+    public mpos: number[] = [];
+    public wpos: number[] = [];
 
-    feedCurrent: number = 0;
-    feedTarget: number = 0;
+    public feedCurrent = 0;
+    public feedTarget = 0;
 
-    spindleCurrent: number = 0;
-    spindleTarget: number = 0;
-    spindleTemp: number = 0;
+    public spindleCurrent = 0;
+    public spindleTarget = 0;
+    public spindleTemp = 0;
 
-    state: string = 'N/A';
+    public state = 'N/A';
 
-    laserTesting: boolean = false;
+    public laserTesting = false;
 
-    // If the arg contains at least one Carvera status report (query string in Smoothieware
-    // parlance), extract and return the last one.  Otherwise return undefined.
+    /*
+     * If the arg contains at least one Carvera status report (query string in Smoothieware
+     * parlance), extract and return the last one.  Otherwise return undefined.
+     */
     public static extractLast(data: string): StatusReport | undefined {
-        const matches = [...data.matchAll(/<(Sleep|Pause|Wait|Alarm|Home|Hold|Idle|Run)[|].*?>/g)];
+        const matches = [...data.matchAll(/<(Sleep|Pause|Wait|Alarm|Home|Hold|Idle|Run)\|.*?>/g)];
         if (matches.length > 0) {
-            return StatusReport.parse(matches[matches.length - 1][0])
+            return StatusReport.parse((matches.at(-1) ?? [''])[0]);
         }
+
+        return undefined;
     }
 
     public static parse(data: string): StatusReport {
@@ -134,35 +144,39 @@ export class StatusReport {
         if (data.startsWith('<')) {
             data = data.slice(1);
         }
+
         if (data.endsWith('>')) {
             data = data.slice(0, -1);
         }
 
         const split = data.split('|');
-        res.state = split[0];
+        res.state = split[0] ?? 'N/A';
 
         for (let i = 1; i < split.length; i++) {
-            const subSplit = split[i].split(':');
-            switch (subSplit[0]) {
+            const subSplit = (split[i] ?? '').split(':');
+            switch (subSplit[0] ?? '') {
                 case 'MPos':
-                    res.mpos = subSplit[1].split(',').map(parseFloat);
+                    res.mpos = (subSplit[1] ?? '').split(',').map(Number.parseFloat);
                     break;
                 case 'WPos':
-                    res.wpos = subSplit[1].split(',').map(parseFloat);
+                    res.wpos = (subSplit[1] ?? '').split(',').map(Number.parseFloat);
                     break;
                 case 'F':
-                    const feedSplit = subSplit[1].split(',').map(parseFloat);
-                    res.feedCurrent = feedSplit[0];
-                    res.feedTarget = feedSplit[1];
+                    // eslint-disable-next-line no-case-declarations
+                    const feedSplit = (subSplit[1] ?? '').split(',').map(Number.parseFloat);
+                    res.feedCurrent = feedSplit[0] ?? 0;
+                    res.feedTarget = feedSplit[1] ?? 0;
                     break;
                 case 'S':
-                    const spindleSplit = subSplit[1].split(',').map(parseFloat);
-                    res.spindleCurrent = spindleSplit[0];
-                    res.spindleTarget = spindleSplit[1];
-                    res.spindleTemp = spindleSplit[4];
+                    // eslint-disable-next-line no-case-declarations
+                    const spindleSplit = (subSplit[1] ?? '').split(',').map(Number.parseFloat);
+                    res.spindleCurrent = spindleSplit[0] ?? 0;
+                    res.spindleTarget = spindleSplit[1] ?? 0;
+                    res.spindleTemp = spindleSplit[4] ?? 0;
                     break;
                 case 'L':
-                    const laserSplit = subSplit[1].split(',').map(parseFloat);
+                    // eslint-disable-next-line no-case-declarations
+                    const laserSplit = (subSplit[1] ?? '').split(',').map(Number.parseFloat);
                     res.laserTesting = laserSplit[2] !== 0;
                     break;
             }
@@ -172,56 +186,91 @@ export class StatusReport {
     }
 }
 
+// eslint-disable-next-line unicorn/prefer-event-target
 export class ProxyProvider extends EventEmitter {
     private server?: Server;
     private client?: Socket;
 
-    private deviceDataBuffer: string = '';
- 
-    private timer: NodeJS.Timeout;
+    private deviceDataBuffer = '';
 
-    public constructor(private target: ProxyTarget, private port: number, private ip: string) {
+    public constructor(
+        private readonly target: ProxyTarget,
+        private readonly port: number,
+        private readonly ip: string,
+    ) {
         super();
         this.deviceDataHandler = this.deviceDataHandler.bind(this);
         // When there is no client connected, periodically send our own status requests.
-        this.timer = setInterval(() => {
+        setInterval(() => {
             if (this.client === undefined) {
                 this.inject('?');
             }
         }, 500);
     }
 
-    public isBusy() {
+    public isBusy(): boolean {
         return this.client !== undefined;
     }
 
-    public inject(command: string) {
+    public inject(command: string): void {
         this.target.send(Buffer.from(command));
+    }
+    public stop(): void {
+        if (this.server) {
+            this.server.close();
+            this.server = undefined;
+        }
+
+        if (this.client) {
+            this.client.end();
+            this.client = undefined;
+        }
+
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        this.target.unregister(this.deviceDataHandler);
+    }
+
+    public start(): void {
+        this.stop();
+        this.server = new Server();
+        this.server.listen(this.port, this.ip);
+        this.server.on('connection', (socket) => {
+            this.clientHandler(socket);
+        });
+
+        // eslint-disable-next-line @typescript-eslint/unbound-method
+        this.target.register(this.deviceDataHandler);
     }
 
     private clientHandler(socket: Socket) {
         if (this.client) {
             this.client.end();
         }
+
         this.client = socket;
 
         socket.on('error', (err) => {
             if (this.client !== socket) {
                 return;
             }
+
             logger.error(err);
             this.client = undefined;
         });
+
         socket.on('close', () => {
             if (this.client !== socket) {
                 return;
             }
+
             this.client = undefined;
         });
+
         socket.on('data', (data) => {
             if (this.client !== socket) {
                 return;
             }
+
             this.clientDataHandler(data);
         });
     }
@@ -232,34 +281,12 @@ export class ProxyProvider extends EventEmitter {
 
     private deviceDataHandler(data: Buffer) {
         this.client?.write(data);
-        this.deviceDataBuffer += data.toString('utf-8');
+        this.deviceDataBuffer += data.toString('utf8');
         this.deviceDataBuffer = this.deviceDataBuffer.slice(-300); // long enough for a status report
         const status = StatusReport.extractLast(this.deviceDataBuffer);
         if (status) {
             logger.debug(status);
             this.emit('status', status);
         }
-    }
-
-    public stop() {
-        if (this.server) {
-            this.server.close();
-            this.server = undefined;
-        }
-        if (this.client) {
-            this.client.end();
-            this.client = undefined;
-        }
-        this.target.unregister(this.deviceDataHandler);
-    }
-
-    public start() {
-        this.stop();
-        this.server = new Server();
-        this.server.listen(this.port, this.ip);
-        this.server.on('connection', (socket) => {
-            this.clientHandler(socket);
-        });
-        this.target.register(this.deviceDataHandler);
     }
 }
