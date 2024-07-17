@@ -1,5 +1,6 @@
 import { createSocket } from 'node:dgram';
 import { getNetworkInterfaces } from './net';
+import { logger } from '../log';
 
 export interface BusyHandler {
     isBusy(): boolean;
@@ -19,7 +20,7 @@ export class DiscoveryProvider {
                 socket.send(msg, 3333, netif.broadcast_addr, () => {
                     socket.close();
                 });
-                console.debug(`bcast to ${netif.broadcast_addr}: ${msg}`);
+                logger.debug(`bcast to ${netif.broadcast_addr}: ${msg}`);
             }
         }
     }

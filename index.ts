@@ -2,6 +2,7 @@ import { Config } from './config';
 import { DiscoveryProvider } from "./interposer/discovery";
 import { getNetworkAddresses, getNetworkInterfaces } from './interposer/net';
 import { ProxyProvider, SerialProxyTarget, StatusReport, WlanProxyTarget } from "./interposer/proxy";
+import { logger } from './log';
 import { JogReport, PendantDevice } from "./pendant/device";
 import { Axis, CoordinateMode, FeedRate, StepMode } from "./pendant/types";
 
@@ -10,7 +11,7 @@ async function main() {
 
     const SERIAL_PORT = process.env.CARVERA_SERIAL_PORT || Config.CARVERA_SERIAL_PORT;
     if (!SERIAL_PORT == !Config.CARVERA_HOST_NAME) {
-        console.error('Exactly one of CARVERA_SERIAL_PORT and CARVERA_HOST_NAME must be set');
+        logger.error('Exactly one of CARVERA_SERIAL_PORT and CARVERA_HOST_NAME must be set');
         process.exit(1);
     }
 
@@ -20,7 +21,7 @@ async function main() {
     target.send(Buffer.from('?'));  // Query machine status
 
     if (Config.PROXY_IP && !getNetworkAddresses().includes(Config.PROXY_IP)) {
-        console.error(`PROXY_IP must either be blank or one of ${getNetworkAddresses()} (got ${Config.PROXY_IP})`);
+        logger.error(`PROXY_IP must either be blank or one of ${getNetworkAddresses()} (got ${Config.PROXY_IP})`);
         process.exit(1);
     }
     const proxy = new ProxyProvider(target, Config.PROXY_PORT, Config.PROXY_IP);
@@ -132,7 +133,7 @@ async function main() {
                 } else {
                     pendant.coordinateMode = CoordinateMode.MACHINE;
                 }
-                pendant.refreshDisplay().catch(console.error);
+                pendant.refreshDisplay().catch(logger.error);
                 break;
             case 15: // Step
                 break;
@@ -190,10 +191,7 @@ async function main() {
         pendant.refreshDisplay();
     });
 
-    console.log('System online!');
+    logger.info('System online!');
 }
 
-if (!Config.DEBUG_LOGGING) {
-    console.debug = function() {}
-}
-main().catch(console.error);
+main().catch(logger.error);

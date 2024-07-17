@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events';
 import { Server, Socket } from 'node:net';
 import { SerialPort } from 'serialport';
+import { logger } from '../log';
 
 export interface ProxyTarget {
     send(data: Buffer): void;
@@ -60,10 +61,10 @@ export class WlanProxyTarget implements ProxyTarget {
         if (this.socket) {
             return;
         }
-        console.debug(`connecting to ${this.carvera_hostname}:${this.carvera_port}`)
+        logger.debug(`connecting to ${this.carvera_hostname}:${this.carvera_port}`)
         this.socket = new Socket();
         this.socket.connect(this.carvera_port, this.carvera_hostname, () => {
-            console.debug(`connected to ${this.carvera_hostname}:${this.carvera_port}`)
+            logger.debug(`connected to ${this.carvera_hostname}:${this.carvera_port}`)
         });
         this.socket.on('data', (data) => {
             if (this.handler) {
@@ -71,11 +72,11 @@ export class WlanProxyTarget implements ProxyTarget {
             }
         });    
         this.socket.on('close', () => {
-            console.debug()
+            logger.debug('carvera socket closed')
             this.socket = undefined;
         });
         this.socket.on('error', (err) => {
-            console.error(err);
+            logger.error(err);
             this.socket = undefined;
         });
     }
@@ -208,7 +209,7 @@ export class ProxyProvider extends EventEmitter {
             if (this.client !== socket) {
                 return;
             }
-            console.error(err);
+            logger.error(err);
             this.client = undefined;
         });
         socket.on('close', () => {
@@ -235,7 +236,7 @@ export class ProxyProvider extends EventEmitter {
         this.deviceDataBuffer = this.deviceDataBuffer.slice(-300); // long enough for a status report
         const status = StatusReport.extractLast(this.deviceDataBuffer);
         if (status) {
-            console.debug(status);
+            logger.debug(status);
             this.emit('status', status);
         }
     }
