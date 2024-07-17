@@ -24,8 +24,11 @@ function main() {
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (Config.PROXY_IP && !getNetworkAddresses().includes(Config.PROXY_IP)) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        logger.error(`PROXY_IP must either be blank or one of ${getNetworkAddresses()} (got ${Config.PROXY_IP})`);
+        logger.error(
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            `PROXY_IP must either be blank or one of ${getNetworkAddresses().join(', ')} (got ${Config.PROXY_IP})`,
+        );
+
         process.exit(1);
     }
 

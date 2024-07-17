@@ -285,7 +285,7 @@ export class ProxyProvider extends EventEmitter {
         this.deviceDataBuffer = this.deviceDataBuffer.slice(-300); // long enough for a status report
         const status = StatusReport.extractLast(this.deviceDataBuffer);
         if (status) {
-            logger.debug(status);
+            logger.debug(JSON.stringify(status));
             this.emit('status', status);
         }
     }
