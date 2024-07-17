@@ -9,7 +9,7 @@ export class Config {
     public static readonly CARVERA_PORT = 2222;
 
     // If specified, listen on one interface (otherwise listen on all).
-    public static readonly PROXY_IP = '';
+    public static readonly PROXY_IP = '127.0.0.1';
     public static readonly PROXY_PORT = 9999;
 
     public static readonly DEBUG_LOGGING = false;
