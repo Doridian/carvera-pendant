@@ -9,9 +9,9 @@ It does this by setting itself up as a "man in the middle" between the Carvera c
 1. Clone this repository (or download it as a ZIP and extract it)
 1. Make sure you have NodeJS installed (I use version 18)
 1. Run `npm ci` before the first run (and after every update)
-1. Set the environment variable `CARVERA_SERIAL_PORT` to the serial port your Carvera is using (on Windows that might be `COM3`, on Linux `/dev/ttyUSB0`, etc)
+1. Set `CARVERA_SERIAL_PORT` or `CARVERA_HOST_NAME` in `config.ts`
 1. Make sure the Carvera controller software is NOT connected to the machine
-1. Make sure your pendant is plugged in and turned on
+1. Make sure the pendant dongle is pugged in (the pendant itself doesn't have to be on)
 1. Run `npm start`
 1. Wait for the line `System online!` to be printed out
 1. In the menu of Carvera Controller, select `WIFI...` and then `Pendant` should show up in the drop down after a couple seconds
@@ -20,6 +20,5 @@ It does this by setting itself up as a "man in the middle" between the Carvera c
 
 ## Limitations
 
-- Most of the functionality of the Pendant only works (by design) while the Carvera Controller is connected to the pendant software
 - Only `WHB04B` style pendants supported at the moment
-- Uploading large GCode files might be slower than WiFi due to the serial connection
+- If you're using a serial connection rather than WiFi, uploading large GCode files will be slower

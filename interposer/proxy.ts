@@ -1,7 +1,7 @@
 import EventEmitter from 'node:events';
 import { Server, Socket } from 'node:net';
 import { SerialPort } from 'serialport';
-import {DelimiterParser} from 'serialport';
+import { logger } from '../log';
 
 export interface ProxyTarget {
     send(data: Buffer): void;
@@ -9,15 +9,13 @@ export interface ProxyTarget {
     unregister(handler: (data: Buffer) => void): void;
 }
 
-export class SerialProxyTarget {
+export class SerialProxyTarget implements ProxyTarget {
     private serial: SerialPort;
-    private parser: DelimiterParser;
     constructor(path: string) {
         this.serial = new SerialPort({
             path,
             baudRate: 115200,
         });
-        this.parser = this.serial.pipe(new DelimiterParser({ delimiter: '\n', includeDelimiter: true }));
     }
 
     send(data: Buffer) {
@@ -25,11 +23,62 @@ export class SerialProxyTarget {
     }
 
     register(handler: (data: Buffer) => void) {
-        this.parser.on('data', handler);
+        this.serial.on('data', handler);
     }
 
     unregister(handler: (data: Buffer) => void) {
         this.serial.off('data', handler);
+    }
+}
+
+export class WlanProxyTarget implements ProxyTarget {
+    private socket?: Socket;
+    private timer?: NodeJS.Timeout;
+    private handler?: (data: Buffer) => void;
+
+    constructor(private carvera_hostname: string, private carvera_port: number) {
+        this.connect();
+        this.timer = setInterval(() => {
+            this.connect();
+        }, 10000);
+    }
+
+    public send(data: Buffer): void {
+        if (this.socket) {
+            this.socket.write(data);
+        }
+    }
+
+    public register(handler: (data: Buffer) => void): void {
+        this.handler = handler;
+    }
+
+    public unregister(handler: (data: Buffer) => void): void {
+        this.handler = undefined;
+    }
+
+    private connect() {
+        if (this.socket) {
+            return;
+        }
+        logger.debug(`connecting to ${this.carvera_hostname}:${this.carvera_port}`)
+        this.socket = new Socket();
+        this.socket.connect(this.carvera_port, this.carvera_hostname, () => {
+            logger.debug(`connected to ${this.carvera_hostname}:${this.carvera_port}`)
+        });
+        this.socket.on('data', (data) => {
+            if (this.handler) {
+                this.handler(data);
+            }
+        });    
+        this.socket.on('close', () => {
+            logger.debug('carvera socket closed')
+            this.socket = undefined;
+        });
+        this.socket.on('error', (err) => {
+            logger.error(err);
+            this.socket = undefined;
+        });
     }
 }
 
@@ -70,8 +119,24 @@ export class StatusReport {
 
     laserTesting: boolean = false;
 
+    // If the arg contains at least one Carvera status report (query string in Smoothieware
+    // parlance), extract and return the last one.  Otherwise return undefined.
+    public static extractLast(data: string): StatusReport | undefined {
+        const matches = [...data.matchAll(/<(Sleep|Pause|Wait|Alarm|Home|Hold|Idle|Run)[|].*?>/g)];
+        if (matches.length > 0) {
+            return StatusReport.parse(matches[matches.length - 1][0])
+        }
+    }
+
     public static parse(data: string): StatusReport {
         const res = new StatusReport();
+
+        if (data.startsWith('<')) {
+            data = data.slice(1);
+        }
+        if (data.endsWith('>')) {
+            data = data.slice(0, -1);
+        }
 
         const split = data.split('|');
         res.state = split[0];
@@ -111,38 +176,27 @@ export class ProxyProvider extends EventEmitter {
     private server?: Server;
     private client?: Socket;
 
-    private clientDataBuffer: string = '';
+    private deviceDataBuffer: string = '';
  
-    private lastQuestionTime: number = 0;
+    private timer: NodeJS.Timeout;
 
-    public constructor(private target: ProxyTarget, private port: number, private ip: string = '127.0.0.1') {
+    public constructor(private target: ProxyTarget, private port: number, private ip: string) {
         super();
         this.deviceDataHandler = this.deviceDataHandler.bind(this);
+        // When there is no client connected, periodically send our own status requests.
+        this.timer = setInterval(() => {
+            if (this.client === undefined) {
+                this.inject('?');
+            }
+        }, 500);
     }
 
     public isBusy() {
         return this.client !== undefined;
     }
 
-    public isClientAlive() {
-        if (this.client === undefined) {
-            return false;
-        }
-        if ((Date.now() - this.lastQuestionTime) > 1000) {
-            return false;
-        }
-        return true;
-    }
-
     public inject(command: string) {
         this.target.send(Buffer.from(command));
-    }
-
-    public injectWhenAlive(command: string) {
-        if (!this.isClientAlive()) {
-            return;
-        }
-        this.inject(command);
     }
 
     private clientHandler(socket: Socket) {
@@ -150,13 +204,12 @@ export class ProxyProvider extends EventEmitter {
             this.client.end();
         }
         this.client = socket;
-        this.clientDataBuffer = '';
 
         socket.on('error', (err) => {
             if (this.client !== socket) {
                 return;
             }
-            console.error(err);
+            logger.error(err);
             this.client = undefined;
         });
         socket.on('close', () => {
@@ -175,26 +228,16 @@ export class ProxyProvider extends EventEmitter {
 
     private clientDataHandler(data: Buffer) {
         this.target.send(data);
-        this.clientDataBuffer += data.toString('utf-8');
-        for (;;) {
-            const match = /[?\n]/.exec(this.clientDataBuffer);
-            if (!match) {
-                break;
-            }
-            const cmd = this.clientDataBuffer.substring(0, match.index + 1).trim();
-            if (cmd === '?') {
-                this.lastQuestionTime = Date.now();
-            }
-            this.clientDataBuffer = this.clientDataBuffer.substring(match.index + 1);
-        }
     }
 
     private deviceDataHandler(data: Buffer) {
         this.client?.write(data);
-        const response = data.toString('utf-8').trim();
-        if (response.startsWith('<') && response.endsWith('>')) {
-            const parsedResponse = StatusReport.parse(response);
-            this.emit('status', parsedResponse);
+        this.deviceDataBuffer += data.toString('utf-8');
+        this.deviceDataBuffer = this.deviceDataBuffer.slice(-300); // long enough for a status report
+        const status = StatusReport.extractLast(this.deviceDataBuffer);
+        if (status) {
+            logger.debug(status);
+            this.emit('status', status);
         }
     }
 

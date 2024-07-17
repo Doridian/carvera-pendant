@@ -2,8 +2,8 @@ import { EventEmitter } from "node:events";
 import { Device, HID, devices } from "node-hid";
 import { ControlReport } from "./control";
 import { DeviceReport } from "./report";
-import { CoordinateMode, DisplayFlags, Axis, FeedRate, StepMode } from "./types";
-import { exitCode } from "node:process";
+import { CoordinateMode, Axis, FeedRate, StepMode } from "./types";
+import { logger } from "../log";
 
 const PENDANT_VID = 0x10ce;
 const PENDANT_PID = 0xeb93;
@@ -76,10 +76,11 @@ export class PendantDevice extends EventEmitter {
         // Sort the paths to ensure that, on Windows, the read device comes first.
         const devicePaths = Array.from(uniqueDevicePaths).sort();
         if (deviceInfos.length == 0) {
-            throw new Error('No pendant dongle found');
+            logger.error('No pendant dongle found');
+            process.exit(1);
         } else if (devicePaths.length != 1 && devicePaths.length != 2) {
-            throw new Error('Expected 1 or 2 pendant HID devices, found ' +
-                devicePaths.length + ': ' + devicePaths);
+            logger.error(`Expected 1 or 2 pendant HID devices, found ${devicePaths.length}: ${devicePaths}`);
+            process.exit(1);
         }
 
         this.readDevice = new HID(devicePaths[0]);
@@ -117,12 +118,14 @@ export class PendantDevice extends EventEmitter {
 
         for (const button of report.buttons) {
             if (!this.pressedButtons.has(button)) {
+                logger.debug(`button_down: ${button}`);
                 this.emit('button_down', button);
             }
         }
 
         for (const oldButton of this.pressedButtons) {
             if (!report.buttons.has(oldButton)) {
+                logger.debug(`button_up: ${oldButton}`);
                 this.emit('button_up', oldButton);
             }
         }
@@ -134,6 +137,7 @@ export class PendantDevice extends EventEmitter {
                 rate: report.feedRate,
                 stepMode: this.stepMode,
             };
+            logger.debug(`jog: ${jogReport}`);
             this.emit('jog', jogReport);
         }
 

@@ -1,4 +1,6 @@
 import { createSocket } from 'node:dgram';
+import { getNetworkInterfaces } from './net';
+import { logger } from '../log';
 
 export interface BusyHandler {
     isBusy(): boolean;
@@ -8,13 +10,19 @@ export class DiscoveryProvider {
     private timer?: NodeJS.Timeout;
 
     public constructor(public machine: string, public ip: string, public port: number, private busyHandler?: BusyHandler) {
-
     }
 
     public send() {
-        const msg = `${this.machine},${this.ip},${this.port},${this.busyHandler?.isBusy() ? '1' : '0'}`;
-        const socket = createSocket('udp4');
-        socket.send(msg, 3333, '127.0.0.1');
+        for (const netif of getNetworkInterfaces()) {
+            if (!this.ip || netif.ipv4 == this.ip) {
+                const msg = `${this.machine},${netif.ipv4},${this.port},${this.busyHandler?.isBusy() ? '1' : '0'}`;
+                const socket = createSocket('udp4');
+                socket.send(msg, 3333, netif.broadcast_addr, () => {
+                    socket.close();
+                });
+                logger.debug(`bcast to ${netif.broadcast_addr}: ${msg}`);
+            }
+        }
     }
 
     public stop() {
