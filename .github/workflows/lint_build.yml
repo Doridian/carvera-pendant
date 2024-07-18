@@ -38,7 +38,7 @@ jobs:
         uses: wearerequired/lint-action@v2
         with:
           eslint: true
-          eslint_dir: src
+          eslint_dir: .
           eslint_extensions: ts
           prettier: true
           prettier_dir: src
