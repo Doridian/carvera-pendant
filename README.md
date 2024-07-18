@@ -7,9 +7,9 @@ It does this by setting itself up as a "man in the middle" between the Carvera c
 ## Set up
 
 1. Clone this repository (or download it as a ZIP and extract it)
-1. Make sure you have NodeJS installed (I use version 18)
+1. Make sure you have NodeJS installed (I use version 20)
 1. Run `npm ci` before the first run (and after every update)
-1. Set `CARVERA_SERIAL_PORT` or `CARVERA_HOST_NAME` in `config.ts`
+1. Set `CARVERA_SERIAL_PORT` or `CARVERA_HOST_NAME` in `config.ts` or via environment variables
 1. Make sure the Carvera controller software is NOT connected to the machine
 1. Make sure the pendant dongle is pugged in (the pendant itself doesn't have to be on)
 1. Run `npm start`
