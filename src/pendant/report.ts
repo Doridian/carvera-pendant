@@ -1,9 +1,9 @@
-import { Axis, FeedRate } from './types';
+import { Axis, Button, FeedRate } from './types';
 
 const SELECTED_AXIS_NONE = 0x06;
 
 export class DeviceReport {
-    public buttons: Set<number>;
+    public buttons: Set<Button>;
     public feedRate: FeedRate;
     public axis?: Axis;
     public jog: number;

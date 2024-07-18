@@ -4,7 +4,7 @@ import { getNetworkAddresses } from './interposer/net';
 import { ProxyProvider, SerialProxyTarget, StatusReport, WlanProxyTarget } from './interposer/proxy';
 import { logger } from './log';
 import { JogReport, PendantDevice } from './pendant/device';
-import { Axis, CoordinateMode, FeedRate, Button, StepMode } from './pendant/types';
+import { Axis, Button, CoordinateMode, FeedRate, StepMode } from './pendant/types';
 
 function main() {
     const pendant = new PendantDevice();
@@ -71,7 +71,7 @@ function main() {
         proxy.inject(`$J ${Axis[jog.axis]}${jogAmount.toFixed(4)}\n`);
     });
 
-    pendant.on('button_up', (button: Button /*, fn_modifier: boolean*/) => {
+    pendant.on('button_up', (button: Button /* , fn_modifier: boolean*/) => {
         switch (button) {
             case Button.RESET:
                 proxy.inject('\n$X\n');
@@ -90,7 +90,8 @@ function main() {
                         proxy.inject('\n!\n');
                         break;
                 }
-                break
+
+                break;
 
             case Button.MACRO_1_FEED_PLUS:
                 break;
@@ -122,6 +123,7 @@ function main() {
                 } else {
                     proxy.inject('M321\nM323\n');
                 }
+
                 break;
 
             case Button.MACRO_9_PROBE_Z:
@@ -145,6 +147,9 @@ function main() {
 
             case Button.MACRO_10:
                 proxy.inject(`G10 L20 P0 ${Axis[pendant.selectedAxis]}0\n`);
+                break;
+
+            case Button.FN: // we never receive this
                 break;
         }
     });

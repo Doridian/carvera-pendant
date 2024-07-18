@@ -3,7 +3,7 @@ import { Device, devices, HID } from 'node-hid';
 import { logger } from '../log';
 import { ControlReport } from './control';
 import { DeviceReport } from './report';
-import { Axis, CoordinateMode, FeedRate, Button, StepMode } from './types';
+import { Axis, Button, CoordinateMode, FeedRate, StepMode } from './types';
 
 const PENDANT_VID = 0x10_ce;
 const PENDANT_PID = 0xeb_93;
@@ -38,11 +38,11 @@ export class PendantDevice extends EventEmitter {
     public selectedAxis: Axis = Axis.C;
 
     // Control state
-    private pressedButtons = new Set<number>();
+    private pressedButtons = new Set<Button>();
     // Should the FN modifier apply to the next button press?
-    private fnModifierActive: boolean = false;
+    private fnModifierActive = false;
     // Should the FN modifier be cleared as soon as the FN button is released?
-    private clearModifierOnFnUp: boolean = false;
+    private clearModifierOnFnUp = false;
 
     // Internal state
     private axisLines: Axis[] = DISPLAY_AXIS_XYZ;
@@ -133,13 +133,16 @@ export class PendantDevice extends EventEmitter {
         for (const button of report.buttons) {
             if (!this.pressedButtons.has(button)) {
                 if (button === Button.FN) {
-                    // FN on its own will apply the modifier to the next button.
-                    // Pressing FN on its own a second time will clear the modifier.
-                    // Holding down FN while pressing other buttons will apply the
-                    // modifier to just those buttons.
+                    /*
+                     * FN on its own will apply the modifier to the next button.
+                     * Pressing FN on its own a second time will clear the modifier.
+                     * Holding down FN while pressing other buttons will apply the
+                     * modifier to just those buttons.
+                     */
                     this.fnModifierActive = !this.fnModifierActive;
                     this.clearModifierOnFnUp = false;
-                } else { // non-FN button
+                } else {
+                    // non-FN button
                     logger.debug(`button_down: ${this.fnModifierActive ? 'FN ' : ''}${Button[button]}`);
                     this.emit('button_down', button, this.fnModifierActive);
                     this.clearModifierOnFnUp = true;
@@ -154,7 +157,8 @@ export class PendantDevice extends EventEmitter {
                         this.fnModifierActive = false;
                         this.clearModifierOnFnUp = false;
                     }
-                } else { // non-FN button
+                } else {
+                    // non-FN button
                     logger.debug(`button_up: ${this.fnModifierActive ? 'FN ' : ''}${Button[oldButton]}`);
                     this.emit('button_up', oldButton, this.fnModifierActive);
                     // If FN is no longed being held down, clear FN status
