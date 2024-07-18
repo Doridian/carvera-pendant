@@ -1,0 +1,33 @@
+name: Run release build
+
+on:
+    push:
+        branches:
+            - main
+    workflow_call: {}
+
+jobs:
+    lint_and_build:
+      uses: ./.github/workflows/lint_build.yml
+      secrets: inherit
+    release:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            checks: write
+        steps:
+            - name: Check out the repo
+              uses: actions/checkout@v4
+            - name: Install Node.js dependencies
+              run: npm ci
+            - name: Build
+              run: npm run build
+            - name: Archive build
+              run: tar -cvzf carvera-pendant.tar.gz dist package.json package-lock.json README.md
+            - name: Release mainline
+              uses: softprops/action-gh-release@v2
+              with:
+                tag_name: latest
+                files: carvera-pendant.tar.gz
+                fail_on_unmatched_files: true
+                prerelease: true
