@@ -140,8 +140,8 @@ export class PendantDevice extends EventEmitter {
                     this.fnModifierActive = !this.fnModifierActive;
                     this.clearModifierOnFnUp = false;
                 } else { // non-FN button
-                    logger.debug(`button_down: ${button}`);
-                    this.emit('button_down', button);
+                    logger.debug(`button_down: ${this.fnModifierActive ? 'FN ' : ''}${Button[button]}`);
+                    this.emit('button_down', button, this.fnModifierActive);
                     this.clearModifierOnFnUp = true;
                 }
             }
@@ -155,7 +155,7 @@ export class PendantDevice extends EventEmitter {
                         this.clearModifierOnFnUp = false;
                     }
                 } else { // non-FN button
-                    logger.debug(`button_up: ${oldButton} fn=${this.fnModifierActive}`);
+                    logger.debug(`button_up: ${this.fnModifierActive ? 'FN ' : ''}${Button[oldButton]}`);
                     this.emit('button_up', oldButton, this.fnModifierActive);
                     // If FN is no longed being held down, clear FN status
                     if (!this.pressedButtons.has(Button.FN)) {
