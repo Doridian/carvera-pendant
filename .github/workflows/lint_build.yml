@@ -41,6 +41,6 @@ jobs:
           eslint_dir: .
           eslint_extensions: ts
           prettier: true
-          prettier_dir: src
+          prettier_dir: .
       - name: Build
         run: npm run build
