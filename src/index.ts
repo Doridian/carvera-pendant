@@ -93,7 +93,7 @@ function main() {
         proxy.inject(`$J ${axisName}${jogAmount.toFixed(4)}\n`);
     });
 
-    pendant.on('button_up', (button: Button, fn_modifier: boolean) => {
+    pendant.on('button_up', (button: Button /*, fn_modifier: boolean*/) => {
         switch (button) {
             case Button.RESET:
                 proxy.inject('\n$X\n');
@@ -144,9 +144,6 @@ function main() {
                 } else {
                     proxy.inject('M321\nM323\n');
                 }
-                break;
-
-            case Button.FN:
                 break;
 
             case Button.MACRO_9_PROBE_Z:
