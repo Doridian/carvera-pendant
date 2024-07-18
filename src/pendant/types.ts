@@ -1,4 +1,4 @@
-export const enum Axis {
+export enum Axis {
     X = 0x11,
     Y = 0x12,
     Z = 0x13,
@@ -52,4 +52,23 @@ export const enum StepMode {
 export const enum CoordinateMode {
     MACHINE = DisplayFlags.MACHINE_COORDS,
     WORK = DisplayFlags.WORK_COORDS,
+}
+
+export enum Button {
+    RESET = 1,
+    STOP = 2,
+    START_PAUSE = 3,
+    MACRO_1_FEED_PLUS = 4,
+    MACRO_2_FEED_MINUS = 5,
+    MACRO_3_SPINDLE_PLUS = 6,
+    MACRO_4_SPINDLE_MINUS = 7,
+    MACRO_5_M_HOME = 8,
+    MACRO_6_SAFE_Z = 9,
+    MACRO_7_W_HOME = 10,
+    MACRO_8_S_ON_OFF = 11,
+    FN = 12,
+    MACRO_9_PROBE_Z = 13,
+    CONTINUOUS = 14,
+    STEP = 15,
+    MACRO_10 = 14,
 }

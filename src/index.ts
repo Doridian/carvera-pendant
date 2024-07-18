@@ -4,7 +4,7 @@ import { getNetworkAddresses } from './interposer/net';
 import { ProxyProvider, SerialProxyTarget, StatusReport, WlanProxyTarget } from './interposer/proxy';
 import { logger } from './log';
 import { JogReport, PendantDevice } from './pendant/device';
-import { Axis, CoordinateMode, FeedRate, StepMode } from './pendant/types';
+import { Axis, Button, CoordinateMode, FeedRate, StepMode } from './pendant/types';
 
 function main() {
     const pendant = new PendantDevice();
@@ -42,28 +42,6 @@ function main() {
     let currentStatus = new StatusReport();
 
     pendant.on('jog', (jog: JogReport) => {
-        let axisName = '';
-        switch (jog.axis) {
-            case Axis.X:
-                axisName = 'X';
-                break;
-            case Axis.Y:
-                axisName = 'Y';
-                break;
-            case Axis.Z:
-                axisName = 'Z';
-                break;
-            case Axis.A:
-                axisName = 'A';
-                break;
-            case Axis.B:
-                axisName = 'B';
-                break;
-            case Axis.C:
-                axisName = 'C';
-                break;
-        }
-
         let jogAmount = jog.delta;
         switch (jog.stepMode) {
             case StepMode.STEP:
@@ -90,18 +68,20 @@ function main() {
                 break;
         }
 
-        proxy.inject(`$J ${axisName}${jogAmount.toFixed(4)}\n`);
+        proxy.inject(`$J ${Axis[jog.axis]}${jogAmount.toFixed(4)}\n`);
     });
 
-    pendant.on('button_up', (button: number) => {
+    pendant.on('button_up', (button: Button /* , fn_modifier: boolean*/) => {
         switch (button) {
-            case 1: // Reset
+            case Button.RESET:
                 proxy.inject('\n$X\n');
                 break;
-            case 2: // Stop
+
+            case Button.STOP:
                 proxy.inject('\nM112\n');
                 break;
-            case 3: // Start/Pause
+
+            case Button.START_PAUSE:
                 switch (currentStatus.state) {
                     case 'Idle':
                         proxy.inject('\n~\n');
@@ -113,25 +93,31 @@ function main() {
 
                 break;
 
-            case 4: // Feed+
-                break;
-            case 5: // Feed-
-                break;
-            case 6: // Spindle+
-                break;
-            case 7: // Spindle-
+            case Button.MACRO_1_FEED_PLUS:
                 break;
 
-            case 8: // M-Home
+            case Button.MACRO_2_FEED_MINUS:
+                break;
+
+            case Button.MACRO_3_SPINDLE_PLUS:
+                break;
+
+            case Button.MACRO_4_SPINDLE_MINUS:
+                break;
+
+            case Button.MACRO_5_M_HOME:
                 proxy.inject('G28\n');
                 break;
-            case 9: // Safe-Z
+
+            case Button.MACRO_6_SAFE_Z:
                 proxy.inject('G90\nG53 G0 Z-1\n');
                 break;
-            case 10: // W-Home
+
+            case Button.MACRO_7_W_HOME:
                 proxy.inject('G90\nG53 G0 Z-1\nG54 G0 X0 Y0\n');
                 break;
-            case 11: // S-ON/OFF
+
+            case Button.MACRO_8_S_ON_OFF:
                 if (currentStatus.laserTesting) {
                     proxy.inject('M324\nM322\n');
                 } else {
@@ -139,14 +125,12 @@ function main() {
                 }
 
                 break;
-            case 12: // Fn
-                break;
 
-            case 13: // Probe-Z
+            case Button.MACRO_9_PROBE_Z:
                 proxy.inject('G38.2 Z-152.200 F500.000\n');
                 break;
 
-            case 14: // Continuous
+            case Button.CONTINUOUS:
                 pendant.coordinateMode =
                     pendant.coordinateMode === CoordinateMode.MACHINE ? CoordinateMode.WORK : CoordinateMode.MACHINE;
 
@@ -157,34 +141,15 @@ function main() {
                 }
 
                 break;
-            case 15: // Step
+
+            case Button.STEP:
                 break;
 
-            case 16: // Macro-10
-                // eslint-disable-next-line no-case-declarations
-                let axis = '_';
-                switch (pendant.selectedAxis) {
-                    case Axis.X:
-                        axis = 'X';
-                        break;
-                    case Axis.Y:
-                        axis = 'Y';
-                        break;
-                    case Axis.Z:
-                        axis = 'Z';
-                        break;
-                    case Axis.A:
-                        axis = 'A';
-                        break;
-                    case Axis.B:
-                        axis = 'B';
-                        break;
-                    case Axis.C:
-                        axis = 'C';
-                        break;
-                }
+            case Button.MACRO_10:
+                proxy.inject(`G10 L20 P0 ${Axis[pendant.selectedAxis]}0\n`);
+                break;
 
-                proxy.inject(`G10 L20 P0 ${axis}0\n`);
+            case Button.FN: // we never receive this
                 break;
         }
     });
