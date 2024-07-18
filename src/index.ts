@@ -4,7 +4,7 @@ import { getNetworkAddresses } from './interposer/net';
 import { ProxyProvider, SerialProxyTarget, StatusReport, WlanProxyTarget } from './interposer/proxy';
 import { logger } from './log';
 import { JogReport, PendantDevice } from './pendant/device';
-import { Axis, CoordinateMode, FeedRate, StepMode } from './pendant/types';
+import { Axis, CoordinateMode, FeedRate, Key, StepMode } from './pendant/types';
 
 function main() {
     const pendant = new PendantDevice();
@@ -95,13 +95,15 @@ function main() {
 
     pendant.on('button_up', (button: number) => {
         switch (button) {
-            case 1: // Reset
+            case Key.RESET:
                 proxy.inject('\n$X\n');
                 break;
-            case 2: // Stop
+
+            case Key.STOP:
                 proxy.inject('\nM112\n');
                 break;
-            case 3: // Start/Pause
+
+            case Key.START_PAUSE:
                 switch (currentStatus.state) {
                     case 'Idle':
                         proxy.inject('\n~\n');
@@ -110,43 +112,48 @@ function main() {
                         proxy.inject('\n!\n');
                         break;
                 }
+                break
 
-                break;
-
-            case 4: // Feed+
-                break;
-            case 5: // Feed-
-                break;
-            case 6: // Spindle+
-                break;
-            case 7: // Spindle-
+            case Key.MACRO_1_FEED_PLUS:
                 break;
 
-            case 8: // M-Home
+            case Key.MACRO_2_FEED_MINUS:
+                break;
+
+            case Key.MACRO_3_SPINDLE_PLUS:
+                break;
+
+            case Key.MACRO_4_SPINDLE_MINUS:
+                break;
+
+            case Key.MACRO_5_M_HOME:
                 proxy.inject('G28\n');
                 break;
-            case 9: // Safe-Z
+
+            case Key.MACRO_6_SAFE_Z:
                 proxy.inject('G90\nG53 G0 Z-1\n');
                 break;
-            case 10: // W-Home
+
+            case Key.MACRO_7_W_HOME:
                 proxy.inject('G90\nG53 G0 Z-1\nG54 G0 X0 Y0\n');
                 break;
-            case 11: // S-ON/OFF
+
+            case Key.MACRO_8_S_ON_OFF:
                 if (currentStatus.laserTesting) {
                     proxy.inject('M324\nM322\n');
                 } else {
                     proxy.inject('M321\nM323\n');
                 }
-
-                break;
-            case 12: // Fn
                 break;
 
-            case 13: // Probe-Z
+            case Key.FN:
+                break;
+
+            case Key.MACRO_9_PROBE_Z:
                 proxy.inject('G38.2 Z-152.200 F500.000\n');
                 break;
 
-            case 14: // Continuous
+            case Key.CONTINUOUS:
                 pendant.coordinateMode =
                     pendant.coordinateMode === CoordinateMode.MACHINE ? CoordinateMode.WORK : CoordinateMode.MACHINE;
 
@@ -157,10 +164,11 @@ function main() {
                 }
 
                 break;
-            case 15: // Step
+
+            case Key.STEP:
                 break;
 
-            case 16: // Macro-10
+            case Key.MACRO_10:
                 // eslint-disable-next-line no-case-declarations
                 let axis = '_';
                 switch (pendant.selectedAxis) {
