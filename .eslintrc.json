@@ -1,5 +1,6 @@
 {
     "root": true,
+    "ignorePatterns": ["dist", "node_modules"],
     "extends": [
         "eslint:all",
         "plugin:@typescript-eslint/all",
@@ -13,13 +14,7 @@
         "project": ["./tsconfig.json"]
     },
     "parser": "@typescript-eslint/parser",
-    "plugins": [
-        "@typescript-eslint",
-        "import",
-        "prettier",
-        "unicorn",
-        "deprecation"
-    ],
+    "plugins": ["@typescript-eslint", "import", "prettier", "unicorn", "deprecation"],
     "rules": {
         // eslint overrides
         "arrow-body-style": "off",
