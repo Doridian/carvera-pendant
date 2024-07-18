@@ -1,0 +1,17 @@
+# This is a user service, they go in /etc/systemd/user/
+# then you can activate it (as the target user) via
+# systemctl enable --now carvera-pendant
+[Unit]
+Description=Carvera-Pendant proxy
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+Environment=CARVERA_SERIAL_PORT=/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_ABCDEF-if00-port0
+ExecStart=/usr/bin/node ./dist/index.js
+WorkingDirectory=%h/carvera-pendant
+
+[Install]
+WantedBy=default.target

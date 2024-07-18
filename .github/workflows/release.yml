@@ -1,0 +1,54 @@
+name: Run release build
+
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: true
+
+on:
+    push:
+        branches:
+            - main
+    workflow_call: {}
+
+jobs:
+    lint_and_build:
+        permissions:
+            contents: read
+            checks: write
+        uses: ./.github/workflows/lint_build.yml
+        secrets: inherit
+    release:
+        runs-on: ubuntu-latest
+        needs: [lint_and_build]
+        permissions:
+            contents: write
+            packages: write
+        steps:
+            - name: Check out the repo
+              uses: actions/checkout@v4
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: lts/*
+                  check-latest: true
+                  cache: npm
+                  cache-dependency-path: package-lock.json
+            - name: Install Node.js dependencies
+              run: npm ci
+            - name: Build
+              run: npm run build
+            - name: Archive build
+              run: tar -cvzf carvera-pendant.tar.gz dist package.json package-lock.json README.md misc
+            - name: Release mainline
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: latest
+                  files: carvera-pendant.tar.gz
+                  fail_on_unmatched_files: true
+                  prerelease: true
+            - name: Tag Repo
+              uses: richardsimko/update-tag@v1
+              with:
+                  tag_name: latest
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

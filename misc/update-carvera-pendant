@@ -1,0 +1,14 @@
+#!/bin/sh
+# This script takes care of updating carvera-pendant from latest release
+# And then fires off a restart of the carvera-pendant service
+set -ex
+
+rm -rf ~/carvera-pendant
+mkdir ~/carvera-pendant
+cd ~/carvera-pendant
+
+wget https://github.com/Doridian/carvera-pendant/releases/download/latest/carvera-pendant.tar.gz -O carvera-pendant.tar.gz
+tar -xf carvera-pendant.tar.gz
+
+npm ci --omit=dev
+systemctl --user restart carvera-pendant

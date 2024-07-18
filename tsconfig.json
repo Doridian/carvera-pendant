@@ -1,12 +1,7 @@
 {
-    "ts-node": {
-        "compilerOptions": {
-            "module": "commonjs"
-        }
-    },
     "compilerOptions": {
+        "module": "commonjs",
         "target": "ES2022",
-        "module": "ES2022",
         "lib": ["DOM", "ES2022"],
         "declaration": false,
         "declarationMap": false,
