@@ -1,9 +1,5 @@
 name: Run linter and build
 
-concurrency:
-    group: lint-build-${{ github.ref }}
-    cancel-in-progress: true
-
 on:
     push:
         branches:
