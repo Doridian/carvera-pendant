@@ -42,28 +42,6 @@ function main() {
     let currentStatus = new StatusReport();
 
     pendant.on('jog', (jog: JogReport) => {
-        let axisName = '';
-        switch (jog.axis) {
-            case Axis.X:
-                axisName = 'X';
-                break;
-            case Axis.Y:
-                axisName = 'Y';
-                break;
-            case Axis.Z:
-                axisName = 'Z';
-                break;
-            case Axis.A:
-                axisName = 'A';
-                break;
-            case Axis.B:
-                axisName = 'B';
-                break;
-            case Axis.C:
-                axisName = 'C';
-                break;
-        }
-
         let jogAmount = jog.delta;
         switch (jog.stepMode) {
             case StepMode.STEP:
@@ -90,7 +68,7 @@ function main() {
                 break;
         }
 
-        proxy.inject(`$J ${axisName}${jogAmount.toFixed(4)}\n`);
+        proxy.inject(`$J ${Axis[jog.axis]}${jogAmount.toFixed(4)}\n`);
     });
 
     pendant.on('button_up', (button: Button /*, fn_modifier: boolean*/) => {
@@ -166,30 +144,7 @@ function main() {
                 break;
 
             case Button.MACRO_10:
-                // eslint-disable-next-line no-case-declarations
-                let axis = '_';
-                switch (pendant.selectedAxis) {
-                    case Axis.X:
-                        axis = 'X';
-                        break;
-                    case Axis.Y:
-                        axis = 'Y';
-                        break;
-                    case Axis.Z:
-                        axis = 'Z';
-                        break;
-                    case Axis.A:
-                        axis = 'A';
-                        break;
-                    case Axis.B:
-                        axis = 'B';
-                        break;
-                    case Axis.C:
-                        axis = 'C';
-                        break;
-                }
-
-                proxy.inject(`G10 L20 P0 ${axis}0\n`);
+                proxy.inject(`G10 L20 P0 ${Axis[pendant.selectedAxis]}0\n`);
                 break;
         }
     });

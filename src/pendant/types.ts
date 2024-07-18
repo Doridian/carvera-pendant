@@ -1,4 +1,4 @@
-export const enum Axis {
+export enum Axis {
     X = 0x11,
     Y = 0x12,
     Z = 0x13,
