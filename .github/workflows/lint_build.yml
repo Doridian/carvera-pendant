@@ -34,7 +34,6 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: Install Node.js dependencies
         run: npm ci
-        working-directory: frontend
       - name: Run linters
         uses: wearerequired/lint-action@v2
         with:
