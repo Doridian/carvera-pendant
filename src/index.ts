@@ -93,7 +93,7 @@ function main() {
         proxy.inject(`$J ${axisName}${jogAmount.toFixed(4)}\n`);
     });
 
-    pendant.on('button_up', (button: number) => {
+    pendant.on('button_up', (button: Key, fn_modifier: boolean) => {
         switch (button) {
             case Key.RESET:
                 proxy.inject('\n$X\n');
