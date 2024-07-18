@@ -54,7 +54,7 @@ export const enum CoordinateMode {
     WORK = DisplayFlags.WORK_COORDS,
 }
 
-export const enum Key {
+export const enum Button {
     RESET = 1,
     STOP = 2,
     START_PAUSE = 3,
