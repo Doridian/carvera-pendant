@@ -1,0 +1,47 @@
+name: Run linter and build
+
+concurrency:
+  group: lint-build-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+  merge_group: {}
+  workflow_call: {}
+
+jobs:
+  lint_and_build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          check-latest: true
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install Node.js dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          eslint: true
+          eslint_dir: src
+          eslint_extensions: ts
+          prettier: true
+          prettier_dir: src
+      - name: Build
+        run: npm run build
