@@ -9,23 +9,20 @@ import { Axis, CoordinateMode, FeedRate, StepMode } from './pendant/types';
 function main() {
     const pendant = new PendantDevice();
 
-    const SERIAL_PORT = process.env.CARVERA_SERIAL_PORT ?? Config.CARVERA_SERIAL_PORT;
     // eslint-disable-next-line unicorn/no-negation-in-equality-check
-    if (!SERIAL_PORT === !Config.CARVERA_HOST_NAME) {
+    if (!Config.CARVERA_SERIAL_PORT === !Config.CARVERA_HOST_NAME) {
         logger.error('Exactly one of CARVERA_SERIAL_PORT and CARVERA_HOST_NAME must be set');
         process.exit(1);
     }
 
-    const target = SERIAL_PORT
-        ? new SerialProxyTarget(SERIAL_PORT)
+    const target = Config.CARVERA_SERIAL_PORT
+        ? new SerialProxyTarget(Config.CARVERA_SERIAL_PORT)
         : new WlanProxyTarget(Config.CARVERA_HOST_NAME, Config.CARVERA_PORT);
 
     target.send(Buffer.from('?')); // Query machine status
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (Config.PROXY_IP && !getNetworkAddresses().includes(Config.PROXY_IP)) {
         logger.error(
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
             `PROXY_IP must either be blank or one of ${getNetworkAddresses().join(', ')} (got ${Config.PROXY_IP})`,
         );
 
