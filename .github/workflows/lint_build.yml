@@ -42,3 +42,12 @@ jobs:
                   prettier_dir: .
             - name: Build
               run: npm run build
+            - name: Archive build
+              uses: actions/upload-artifact@v4
+              with:
+                name: package
+                path: |
+                  dist
+                  package.json
+                  package-lock.json
+                  README.md
