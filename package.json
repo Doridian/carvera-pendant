@@ -5,8 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "lint": "eslint --report-unused-disable-directives --cache --color ./src && prettier --check ./src",
-    "fmt": "eslint --fix ./src && prettier --write ./src",
+    "lint": "eslint --report-unused-disable-directives --cache --color . && prettier --check .",
+    "fmt": "eslint --fix . && prettier --write .",
     "build": "rimraf dist && tsc --project ."
   },
   "author": "",
