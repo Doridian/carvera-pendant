@@ -6,7 +6,8 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "lint": "eslint --report-unused-disable-directives --cache --color ./src && prettier --check ./src",
-    "fmt": "eslint --fix ./src && prettier --write ./src"
+    "fmt": "eslint --fix ./src && prettier --write ./src",
+    "build": "rimraf dist && tsc --project ."
   },
   "author": "",
   "license": "MIT",
@@ -31,6 +32,7 @@
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-unicorn": "^54.0.0",
     "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.3"
   }
