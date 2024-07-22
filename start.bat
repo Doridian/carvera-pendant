@@ -1,0 +1,2 @@
+npm ci
+npm start

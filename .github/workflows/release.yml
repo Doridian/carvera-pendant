@@ -38,7 +38,7 @@ jobs:
             - name: Build
               run: npm run build
             - name: Archive build
-              run: tar -cvzf carvera-pendant.tar.gz dist package.json package-lock.json README.md misc
+              run: tar -cvzf carvera-pendant.tar.gz dist package.json package-lock.json LICENSE README.md misc start-dist.bat
             - name: Release mainline
               uses: softprops/action-gh-release@v2
               with:
