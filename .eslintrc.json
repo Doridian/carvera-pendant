@@ -144,20 +144,6 @@
         // Style heavy
         "@typescript-eslint/lines-between-class-members": "off",
         "@typescript-eslint/prefer-enum-initializers": "off",
-        "@typescript-eslint/padding-line-between-statements": [
-            "error",
-            {
-                "prev": [
-                    "multiline-block-like",
-                    "multiline-const",
-                    "multiline-expression",
-                    "multiline-let",
-                    "multiline-var"
-                ],
-                "next": "*",
-                "blankLine": "always"
-            }
-        ],
 
         "@typescript-eslint/max-params": ["error", { "max": 6 }],
 
