@@ -114,15 +114,18 @@ export class PendantDevice extends EventEmitter {
 
         this.selectedAxis = report.axis ?? Axis.C;
 
-        let targetAxisOffset = DISPLAY_AXIS_XYZ;
-        switch (report.axis) {
+        let targetAxisOffset;
+        switch (this.selectedAxis) {
             case Axis.A:
             case Axis.B:
             case Axis.C:
                 targetAxisOffset = DISPLAY_AXIS_ABC;
                 break;
-            default:
+            case Axis.X:
+            case Axis.Y:
+            case Axis.Z:
                 targetAxisOffset = DISPLAY_AXIS_XYZ;
+                break;
         }
 
         if (targetAxisOffset !== this.axisLines) {

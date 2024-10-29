@@ -43,8 +43,10 @@ function main() {
 
     pendant.on('jog', (jog: JogReport) => {
         let jogAmount = jog.delta;
+        // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
         switch (jog.stepMode) {
             case StepMode.STEP:
+                // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
                 switch (jog.rate) {
                     case FeedRate.RATE_0_001:
                         jogAmount *= 0.001;
