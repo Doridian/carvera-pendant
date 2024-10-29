@@ -21,7 +21,7 @@ const DISPLAY_AXIS_ABC = [Axis.A, Axis.B, Axis.C];
 // eslint-disable-next-line unicorn/prefer-event-target
 export class PendantDevice extends EventEmitter {
     // Displayed data
-    public axisCoordinates: { [key in Axis]: number } = {
+    public axisCoordinates: Record<Axis, number> = {
         [Axis.X]: 0,
         [Axis.Y]: 0,
         [Axis.Z]: 0,
