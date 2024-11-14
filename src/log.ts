@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { createLogger, format, transports } from 'winston';
 import { Config } from './config';
 
