@@ -105,6 +105,7 @@ export class PendantDevice extends EventEmitter {
         try {
             this.handleError.bind(this);
         } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
             this.handleError(error as Error);
         }
     }
