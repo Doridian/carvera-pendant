@@ -20,5 +20,5 @@ It does this by setting itself up as a "man in the middle" between the Carvera c
 
 ## Limitations
 
--   Only `WHB04B` style pendants supported at the moment
--   If you're using a serial connection rather than WiFi, uploading large GCode files will be slower
+- Only `WHB04B` style pendants supported at the moment
+- If you're using a serial connection rather than WiFi, uploading large GCode files will be slower
