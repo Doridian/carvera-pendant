@@ -30,12 +30,6 @@ jobs:
             - name: Install Node.js dependencies
               run: npm ci
             - name: Run linters
-              uses: wearerequired/lint-action@v2
-              with:
-                  eslint: true
-                  eslint_dir: .
-                  eslint_extensions: ts
-                  prettier: true
-                  prettier_dir: .
+              run: npm run lint
             - name: Build
               run: npm run build
