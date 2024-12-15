@@ -110,6 +110,7 @@ export class PendantDevice extends EventEmitter {
         }
     }
 
+    // eslint-disable-next-line complexity
     private handleReport(report: DeviceReport) {
         let needsRedraw = false;
 
