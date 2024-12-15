@@ -19,7 +19,8 @@ function main() {
         ? new SerialProxyTarget(Config.CARVERA_SERIAL_PORT)
         : new WlanProxyTarget(Config.CARVERA_HOST_NAME, Config.CARVERA_PORT);
 
-    target.send(Buffer.from('?')); // Query machine status
+    // Query machine status
+    target.send(Buffer.from('?'));
 
     if (Config.PROXY_IP && !getNetworkAddresses().includes(Config.PROXY_IP)) {
         logger.error(
@@ -73,6 +74,7 @@ function main() {
         proxy.inject(`$J ${Axis[jog.axis]}${jogAmount.toFixed(4)}\n`);
     });
 
+    // eslint-disable-next-line complexity, no-inline-comments
     pendant.on('button_up', (button: Button /* , fn_modifier: boolean*/) => {
         switch (button) {
             case Button.RESET:
@@ -151,7 +153,8 @@ function main() {
                 proxy.inject(`G10 L20 P0 ${Axis[pendant.selectedAxis]}0\n`);
                 break;
 
-            case Button.FN: // we never receive this
+            // we never receive this
+            case Button.FN:
                 break;
         }
     });

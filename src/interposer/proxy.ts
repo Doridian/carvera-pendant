@@ -138,6 +138,7 @@ export class StatusReport {
         return undefined;
     }
 
+    // eslint-disable-next-line complexity
     public static parse(data: string): StatusReport {
         const res = new StatusReport();
 
@@ -282,7 +283,8 @@ export class ProxyProvider extends EventEmitter {
     private deviceDataHandler(data: Buffer) {
         this.client?.write(data);
         this.deviceDataBuffer += data.toString('utf8');
-        this.deviceDataBuffer = this.deviceDataBuffer.slice(-300); // long enough for a status report
+        // long enough for a status report
+        this.deviceDataBuffer = this.deviceDataBuffer.slice(-300);
         const status = StatusReport.extractLast(this.deviceDataBuffer);
         if (status) {
             logger.debug(JSON.stringify(status));
