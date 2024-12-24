@@ -14,7 +14,7 @@
   "dependencies": {
     "netmask": "^2.0.2",
     "node-hid": "^3.1.0",
-    "serialport": "^12.0.0",
+    "serialport": "^13.0.0",
     "winston": "^3.13.1"
   },
   "devDependencies": {
