@@ -260,7 +260,6 @@ export default tseslint.config(
             'unicorn/no-document-cookie': 'error',
             'unicorn/no-null': 'off',
             'unicorn/custom-error-definition': 'error',
-            'unicorn/no-unsafe-regex': 'error',
             'unicorn/switch-case-braces': 'off',
             'unicorn/no-keyword-prefix': 'off',
             'unicorn/no-process-exit': 'off',
