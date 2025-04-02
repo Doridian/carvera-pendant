@@ -12,13 +12,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "netmask": "^2.0.2",
     "node-hid": "^3.1.0",
     "serialport": "^13.0.0",
     "winston": "^3.13.1"
   },
   "devDependencies": {
-    "@types/netmask": "^2.0.5",
     "@types/node": "^22.0.0",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^10.0.0",
