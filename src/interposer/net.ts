@@ -25,7 +25,6 @@ class NetworkInterface {
             throw new Error(`Invalid CIDR ${this.cidr}`);
         }
         this.cidrSegments = addrParts;
-
     }
 
     public broadcast(): string {
