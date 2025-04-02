@@ -1,7 +1,9 @@
+/* eslint-disable no-bitwise */
 import { networkInterfaces } from 'node:os';
+
 class NetworkInterface {
-    public readonly broadcast: string;
     public readonly cidrSegments: number[];
+    public readonly netmask: number;
 
     // IPv4-only
     public constructor(
@@ -13,21 +15,31 @@ class NetworkInterface {
             throw new Error(`Invalid CIDR ${this.cidr}`);
         }
 
+        this.netmask = Number.parseInt(netmaskStr, 10);
+        if (this.netmask < 0 || this.netmask > 32) {
+            throw new Error(`Invalid CIDR ${this.cidr}`);
+        }
+
         const addrParts = addr.split('.').map((s) => Number.parseInt(s, 10));
         if (addrParts.length !== 4) {
             throw new Error(`Invalid CIDR ${this.cidr}`);
         }
         this.cidrSegments = addrParts;
 
-        // eslint-disable-next-line no-bitwise, @typescript-eslint/no-non-null-assertion
-        let addrInt = (addrParts[0]! << 24) | (addrParts[1]! << 16) | (addrParts[2]! << 8) | addrParts[3]!;
-        const netmask = Number.parseInt(netmaskStr, 10);
+    }
 
-        // eslint-disable-next-line no-bitwise
-        addrInt |= 0xff_ff_ff_ff & ((1 << (32 - netmask)) - 1);
-
-        // eslint-disable-next-line no-bitwise
-        this.broadcast = `${(addrInt >> 24) & 0xff}.${(addrInt >> 16) & 0xff}.${(addrInt >> 8) & 0xff}.${addrInt & 0xff}`;
+    public broadcast(): string {
+        let addrInt =
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            (this.cidrSegments[0]! << 24) |
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            (this.cidrSegments[1]! << 16) |
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            (this.cidrSegments[2]! << 8) |
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.cidrSegments[3]!;
+        addrInt |= 0xff_ff_ff_ff & ((1 << (32 - this.netmask)) - 1);
+        return `${(addrInt >> 24) & 0xff}.${(addrInt >> 16) & 0xff}.${(addrInt >> 8) & 0xff}.${addrInt & 0xff}`;
     }
 }
 
