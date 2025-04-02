@@ -20,13 +20,14 @@ export class DiscoveryProvider {
         for (const netif of getNetworkInterfaces()) {
             if (!this.ip || netif.ipv4 === this.ip) {
                 const msg = `${this.machine},${netif.ipv4},${this.port},${this.busyHandler?.isBusy() ? '1' : '0'}`;
-                const bcastAddr = netif.broadcast_addr === '127.255.255.255' ? '127.0.0.1' : netif.broadcast_addr;
+                const dstAddr = netif.cidrSegments[0] === 127 ? '127.0.0.1' : netif.broadcast;
+
                 const socket = createSocket('udp4');
-                socket.send(msg, 3333, bcastAddr, () => {
+                socket.send(msg, 3333, dstAddr, () => {
                     socket.close();
                 });
 
-                logger.debug(`bcast to ${bcastAddr}: ${msg}`);
+                logger.debug(`bcast to ${dstAddr}: ${msg}`);
             }
         }
     }

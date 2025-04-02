@@ -11,6 +11,8 @@ function main() {
 
     // eslint-disable-next-line unicorn/no-negation-in-equality-check
     if (!Config.CARVERA_SERIAL_PORT === !Config.CARVERA_HOST_NAME) {
+        // eslint-disable-next-line no-console
+        console.log(Config.CARVERA_SERIAL_PORT, Config.CARVERA_HOST_NAME, process.env);
         logger.error('Exactly one of CARVERA_SERIAL_PORT and CARVERA_HOST_NAME must be set');
         process.exit(1);
     }

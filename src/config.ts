@@ -12,7 +12,7 @@ export class Config {
     public static readonly CARVERA_SERIAL_PORT: string = process.env.CARVERA_SERIAL_PORT ?? '';
 
     public static readonly CARVERA_HOST_NAME: string = process.env.CARVERA_HOST_NAME ?? '';
-    public static readonly CARVERA_PORT: number = Number.parseInt(process.env.CARVERA_HOST_NAME ?? '2222', 10);
+    public static readonly CARVERA_PORT: number = Number.parseInt(process.env.CARVERA_PORT ?? '2222', 10);
 
     // If specified, listen on one interface (otherwise listen on all).
     public static readonly PROXY_IP: string = process.env.PROXY_IP ?? '127.0.0.1';
