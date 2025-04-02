@@ -1,4 +1,3 @@
-/* eslint-disable no-bitwise */
 import { networkInterfaces } from 'node:os';
 
 class NetworkInterface {
@@ -28,16 +27,12 @@ class NetworkInterface {
     }
 
     public broadcast(): string {
-        let addrInt =
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            (this.cidrSegments[0]! << 24) |
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            (this.cidrSegments[1]! << 16) |
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            (this.cidrSegments[2]! << 8) |
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            this.cidrSegments[3]!;
+        const segments = this.cidrSegments;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, no-bitwise
+        let addrInt = (segments[0]! << 24) | (segments[1]! << 16) | (segments[2]! << 8) | segments[3]!;
+        // eslint-disable-next-line no-bitwise
         addrInt |= 0xff_ff_ff_ff & ((1 << (32 - this.netmask)) - 1);
+        // eslint-disable-next-line no-bitwise
         return `${(addrInt >> 24) & 0xff}.${(addrInt >> 16) & 0xff}.${(addrInt >> 8) & 0xff}.${addrInt & 0xff}`;
     }
 }
