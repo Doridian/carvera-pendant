@@ -84,6 +84,7 @@ export class PendantDevice extends EventEmitter {
          */
         const uniqueDevicePaths = new Set(deviceInfos.map((di) => di.path ?? ''));
         // Sort the paths to ensure that, on Windows, the read device comes first.
+        // eslint-disable-next-line unicorn/no-array-sort
         const devicePaths = Array.from(uniqueDevicePaths).sort();
         if (deviceInfos.length === 0) {
             logger.error('No pendant dongle found');
