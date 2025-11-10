@@ -1,4 +1,5 @@
 /dist
 /pendant.tar.gz
+result
 node_modules
 .eslintcache
