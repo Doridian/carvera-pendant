@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/index.ts",
+  "bin": {
+    "carvera-pendant": "dist/index.js"
+  },
   "scripts": {
     "start": "ts-node src/index.ts",
     "lint": "eslint --report-unused-disable-directives --cache --color . && prettier --check .",
