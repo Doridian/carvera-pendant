@@ -15,6 +15,20 @@
           src = ./.;
           npmDeps = pkgs.importNpmLock { npmRoot = ./.; };
           npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+
+          autoPatchelfIgnoreMissingDeps = [
+            "libc.musl-x86_64.so.1"
+          ];
+
+          buildInputs = with pkgs; [
+            (nixpkgs.lib.getLib udev)
+            libusb1
+            (nixpkgs.lib.getLib pkgs.stdenv.cc.cc)
+          ];
+
+          nativeBuildInputs = [
+            pkgs.autoPatchelfHook
+          ];
         };
       in
       {
