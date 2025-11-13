@@ -3,10 +3,17 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }: let
-    packageJson = nixpkgs.lib.trivial.importJSON ./package.json;
-  in
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
+    let
+      packageJson = nixpkgs.lib.trivial.importJSON ./package.json;
+    in
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = import nixpkgs { inherit system; };
         package = pkgs.buildNpmPackage {
@@ -34,5 +41,6 @@
       {
         packages.default = package;
         packages.${packageJson.name} = package;
-      });
+      }
+    );
 }
