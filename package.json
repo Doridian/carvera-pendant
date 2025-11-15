@@ -10,7 +10,8 @@
     "start": "ts-node src/index.ts",
     "lint": "eslint --report-unused-disable-directives --cache --color . && prettier --check .",
     "fmt": "eslint --fix . && prettier --write .",
-    "build": "rimraf dist && tsc --project ."
+    "build": "rimraf dist && tsc --project .",
+    "test": "echo 'No tests yet'"
   },
   "author": "Doridian",
   "license": "MIT",
