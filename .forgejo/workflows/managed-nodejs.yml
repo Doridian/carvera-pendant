@@ -1,28 +1,28 @@
 name: NodeJS check
 
 on:
-    pull_request:
-    push:
-        branches:
-            - main
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
-    check-nodejs:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Check out the repo
-              uses: actions/checkout@v4
-            - name: Get us in a detached head state on purpose
-              run: git checkout ${{ github.sha }}
-            - name: Set up NodeJS LTS
-              uses: actions/setup-node@v4
-              with:
-                  node-version: lts/*
-                  check-latest: true
-                  cache: npm
-                  cache-dependency-path: package-lock.json
-                  token: ${{ secrets.EXT_GITHUB_TOKEN }}
-            - run: npm ci
-            - run: npm run lint
-            - run: npm run build
-            - run: npm test
+  check-nodejs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+      - name: Get us in a detached head state on purpose
+        run: git checkout ${{ github.sha }}
+      - name: Set up NodeJS LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          check-latest: true
+          cache: npm
+          cache-dependency-path: package-lock.json
+          token: ${{ secrets.EXT_GITHUB_TOKEN }}
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test
