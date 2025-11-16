@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: https://data.forgejo.org/actions/checkout@v4
       - name: Get us in a detached head state on purpose
         run: git checkout ${{ github.sha }}
       - name: Set up NodeJS LTS
-        uses: actions/setup-node@v4
+        uses: https://data.forgejo.org/actions/setup-node@v4
         with:
           node-version: lts/*
           check-latest: true
