@@ -15,7 +15,7 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = nixpkgs.legacyPackages.${system};
         package = pkgs.buildNpmPackage {
           pname = packageJson.name;
           version = packageJson.version;
