@@ -16,6 +16,6 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
           github_access_token: ${{ secrets.EXT_GITHUB_TOKEN }}
       - name: Lint nix
-        run: nix run 'nixpkgs#nixfmt-tree' -- --ci
+        run: nix run 'nixpkgs#nixfmt-tree' -- --ci --excludes 'gen-*.nix'
       - name: Build nix
         run: nix build .
