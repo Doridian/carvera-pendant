@@ -1,6 +1,7 @@
 name: Nix check
 
 on:
+  workflow_call:
   pull_request:
   push:
     branches:
